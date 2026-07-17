@@ -1,0 +1,30 @@
+# Render Blueprint - deploys the FastAPI backend + a free Postgres DB.
+# Deploy the frontend separately on Vercel (see README).
+services:
+  - type: web
+    name: engineering-predictor-api
+    runtime: python
+    rootDir: backend
+    plan: free
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+    healthCheckPath: /api/health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.9
+      - key: DATABASE_URL
+        fromDatabase:
+          name: eng-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ADMIN_EMAIL
+        value: admin@engpredictor.com
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: FRONTEND_ORIGINS
+        sync: false
+
+databases:
+  - name: eng-db
+    plan: free
