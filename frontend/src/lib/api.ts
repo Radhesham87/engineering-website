@@ -88,4 +88,6 @@ export const api = {
   meta: () => request("/api/dataset/meta"),
   datasetStats: () => request("/api/dataset/stats"),
   summary: () => request("/api/dataset/summary", {}, false),
+  colleges: (body: unknown) =>
+    request("/api/dataset/colleges", { method: "POST", body: JSON.stringify(body) }),
 };

@@ -30,6 +30,7 @@ export function Navbar() {
             <>
               <NavLink href="/predict">MH-CET</NavLink>
               <NavLink href="/jee">JEE Main</NavLink>
+              <NavLink href="/colleges">College List</NavLink>
               <NavLink href="/history">History</NavLink>
             </>
           )}

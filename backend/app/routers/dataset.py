@@ -8,9 +8,11 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session  # noqa: F401
 
 from app.config import settings
+from app.schemas import CollegeListIn
 from app.deps import get_admin, get_approved_user
 from app.models import User
-from app.services.prediction_engine import (dataset_stats, load_dataset, meta)
+from app.services.prediction_engine import (college_list, dataset_stats,
+                                            load_dataset, meta)
 
 router = APIRouter(prefix="/api/dataset", tags=["dataset"])
 
@@ -57,6 +59,18 @@ def public_summary():
         }
     except Exception:  # dataset missing / unreadable → safe zeros
         return {"records": 0, "institutes": 0, "branches": 0, "districts": 0}
+
+
+@router.post("/colleges")
+def colleges(body: CollegeListIn, _: User = Depends(get_approved_user)):
+    """MH-CET college list filtered by category / quota / branch / district."""
+    try:
+        return college_list(body.exam, body.category, body.quotas,
+                            body.branches, body.districts)
+    except FileNotFoundError:
+        raise HTTPException(404, "No dataset uploaded yet.")
+    except ValueError as e:
+        raise HTTPException(400, str(e))
 
 
 @router.post("/upload")

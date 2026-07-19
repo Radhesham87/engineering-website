@@ -58,6 +58,14 @@ class PredictIn(BaseModel):
     quotas: list[str] = Field(default_factory=list)     # MH-CET seat status
 
 
+class CollegeListIn(BaseModel):
+    exam: str = Field(default="MH-CET")
+    category: str = ""
+    branches: list[str] = Field(default_factory=list)
+    districts: list[str] = Field(default_factory=list)
+    quotas: list[str] = Field(default_factory=list)
+
+
 class CollegeRow(BaseModel):
     sr_no: int
     college_code: str

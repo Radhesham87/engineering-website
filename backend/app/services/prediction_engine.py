@@ -156,3 +156,43 @@ def predict(exam: str, mode: str, value: float, category: str,
         })
     return {"show_category": show_category, "count": len(rows),
             "results": rows}
+
+
+def college_list(exam: str, category: str = "", quotas=None,
+                 branches=None, districts=None, limit: int = 2000) -> dict:
+    """List MH-CET colleges (with cutoffs) matching filters — no score needed."""
+    df = load_dataset()
+    d = df[df["exam_u"] == exam.upper()]
+    show_category = exam.upper() == "MH-CET"
+    if show_category and category:
+        d = d[d["category_u"] == category.upper()]
+    brs = [b for b in (branches or []) if b]
+    if brs:
+        d = d[d["branch_u"].isin([b.upper() for b in brs])]
+    dsts = [x for x in (districts or []) if x]
+    if dsts:
+        d = d[d["district_u"].isin([x.upper() for x in dsts])]
+    qtas = [q for q in (quotas or []) if q]
+    if qtas:
+        d = d[d["status_u"].isin([q.upper() for q in qtas])]
+
+    d = d[d["cutoff_percentile"].notna()].copy()
+    d = d.sort_values(["cutoff_percentile", "cutoff_rank"],
+                      ascending=[False, True], na_position="last").head(limit)
+
+    rows = []
+    for i, (_, r) in enumerate(d.iterrows(), 1):
+        rows.append({
+            "sr_no": i,
+            "college_code": str(r["college_code"]),
+            "college_name": str(r["college_name"]),
+            "district": str(r["district"]) or "-",
+            "branch": str(r["branch"]),
+            "category": str(r["category"]) if show_category else "-",
+            "status": str(r["status"]) or "-",
+            "cutoff_percentile": (round(float(r["cutoff_percentile"]), 4)
+                                  if pd.notna(r["cutoff_percentile"]) else None),
+            "cutoff_rank": (int(r["cutoff_rank"])
+                            if pd.notna(r["cutoff_rank"]) else None),
+        })
+    return {"show_category": show_category, "count": len(rows), "results": rows}
