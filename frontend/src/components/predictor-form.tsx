@@ -18,6 +18,8 @@ export function PredictorForm({ exam }: { exam: "MH-CET" | "JEE-Main" }) {
   const router = useRouter();
   const isMhtcet = exam === "MH-CET";
   const accent = isMhtcet ? "blue" : "purple";
+  const FIELD =
+    "w-full rounded-lg border border-slate-700 bg-slate-800/70 px-3 py-2.5 text-sm text-white placeholder-slate-500 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/40";
 
   const [meta, setMeta] = useState<Meta | null>(null);
   const [studentName, setStudentName] = useState("");
@@ -94,7 +96,7 @@ export function PredictorForm({ exam }: { exam: "MH-CET" | "JEE-Main" }) {
 
         <div>
           <label className="label">Enter Your Name</label>
-          <input className="input" value={studentName}
+          <input className={FIELD} value={studentName}
             onChange={(e) => setStudentName(e.target.value)}
             placeholder="Your full name" />
         </div>
@@ -118,7 +120,7 @@ export function PredictorForm({ exam }: { exam: "MH-CET" | "JEE-Main" }) {
             Your {exam} {mode === "percentile" ? "Percentile" : "Rank"}
           </label>
           <div className="flex items-stretch gap-2">
-            <input className="input" type="number" value={value}
+            <input className={FIELD} type="number" value={value}
               onChange={(e) => setValue(e.target.value)}
               placeholder={mode === "percentile" ? "e.g. 95.5" : "e.g. 15000"} />
             <button type="button" onClick={() => step(-1)}
@@ -131,7 +133,7 @@ export function PredictorForm({ exam }: { exam: "MH-CET" | "JEE-Main" }) {
         {isMhtcet && (
           <div>
             <label className="label">Category</label>
-            <select className="input" value={category}
+            <select className={`${FIELD} [&>option]:bg-slate-800 [&>option]:text-white`} value={category}
               onChange={(e) => setCategory(e.target.value)}>
               <option value="">— Select category —</option>
               {(em?.categories ?? []).map((c) => <option key={c}>{c}</option>)}
