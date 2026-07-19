@@ -35,6 +35,7 @@ export interface ExamMeta {
   branches: string[];
   categories: string[];
   districts: string[];
+  quotas: string[];
 }
 
 export interface Meta {

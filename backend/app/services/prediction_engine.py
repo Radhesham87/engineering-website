@@ -58,6 +58,7 @@ def load_dataset() -> pd.DataFrame:
         df["branch_u"] = df["branch"].str.upper()
         df["category_u"] = df["category"].str.upper()
         df["district_u"] = df["district"].str.upper()
+        df["status_u"] = df["status"].str.upper()
 
         _CACHE.update({"path": path, "mtime": mtime, "df": df})
         return df
@@ -72,6 +73,7 @@ def meta() -> dict:
             "branches": sorted(b for b in sub["branch"].unique() if b),
             "categories": sorted(c for c in sub["category"].unique() if c),
             "districts": sorted(d for d in sub["district"].unique() if d),
+            "quotas": sorted(s for s in sub["status"].unique() if s),
         }
     return out
 
@@ -98,6 +100,7 @@ def _pct_from_rank(sub: pd.DataFrame, rank: float):
 
 def predict(exam: str, mode: str, value: float, category: str,
             branches: list[str], districts: list[str],
+            quotas: list[str] | None = None,
             window: dict | None = None) -> dict:
     df = load_dataset()
     w = window or {}
@@ -117,6 +120,9 @@ def predict(exam: str, mode: str, value: float, category: str,
     dsts = [x for x in (districts or []) if x]
     if dsts:
         d = d[d["district_u"].isin([x.upper() for x in dsts])]
+    qtas = [q for q in (quotas or []) if q]
+    if qtas:
+        d = d[d["status_u"].isin([q.upper() for q in qtas])]
 
     if mode == "rank":
         percentile = _pct_from_rank(d if not d.empty else df, value)

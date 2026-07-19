@@ -31,7 +31,8 @@ def predict(body: PredictIn, db: Session = Depends(get_db),
             user: User = Depends(get_approved_user)):
     try:
         res = run_predict(body.exam, body.mode, body.value, body.category,
-                          body.branches, body.districts, _window(db))
+                          body.branches, body.districts,
+                          quotas=body.quotas, window=_window(db))
     except FileNotFoundError:
         raise HTTPException(503, "Prediction dataset is not available.")
     except ValueError as e:

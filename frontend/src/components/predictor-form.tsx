@@ -28,6 +28,7 @@ export function PredictorForm({ exam }: { exam: "MH-CET" | "JEE-Main" }) {
   const [category, setCategory] = useState("");
   const [branches, setBranches] = useState<string[]>([]);
   const [districts, setDistricts] = useState<string[]>([]);
+  const [quotas, setQuotas] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<PredictResult | null>(null);
 
@@ -63,6 +64,7 @@ export function PredictorForm({ exam }: { exam: "MH-CET" | "JEE-Main" }) {
       const res = (await api.predict({
         student_name: studentName, exam, mode, value: num,
         category: isMhtcet ? category : "", branches, districts,
+        quotas: isMhtcet ? quotas : [],
       })) as PredictResult;
       setResult(res);
       if (res.count === 0) toast.info("No colleges matched these filters.");
@@ -139,6 +141,13 @@ export function PredictorForm({ exam }: { exam: "MH-CET" | "JEE-Main" }) {
               {(em?.categories ?? []).map((c) => <option key={c}>{c}</option>)}
             </select>
           </div>
+        )}
+
+        {isMhtcet && (
+          <MultiSelect label="Quota (seat type)" options={em?.quotas ?? []}
+            selected={quotas} onChange={setQuotas}
+            placeholder="Search quotas…"
+            hint="Empty = All Quotas. e.g. State Level, Home University." />
         )}
 
         <MultiSelect label="Branch (select one or more)" options={em?.branches ?? []}

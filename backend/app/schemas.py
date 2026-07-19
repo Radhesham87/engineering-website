@@ -55,6 +55,7 @@ class PredictIn(BaseModel):
     category: str = ""                            # MH-CET CAP category
     branches: list[str] = Field(default_factory=list)   # empty => all
     districts: list[str] = Field(default_factory=list)  # empty => all
+    quotas: list[str] = Field(default_factory=list)     # MH-CET seat status
 
 
 class CollegeRow(BaseModel):
