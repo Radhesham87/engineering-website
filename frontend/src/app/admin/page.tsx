@@ -143,10 +143,12 @@ export default function AdminPage() {
               <tr>
                 <th className="px-3 py-2">Name</th>
                 <th className="px-3 py-2">Email</th>
+                <th className="px-3 py-2">Mobile</th>
                 <th className="px-3 py-2">City/State</th>
                 <th className="px-3 py-2">Status</th>
                 <th className="px-3 py-2">Active</th>
                 <th className="px-3 py-2">Predictions</th>
+                <th className="px-3 py-2">Registered</th>
                 <th className="px-3 py-2">Actions</th>
               </tr>
             </thead>
@@ -155,6 +157,7 @@ export default function AdminPage() {
                 <tr key={u.id} className="border-t border-slate-100 dark:border-slate-800">
                   <td className="px-3 py-2 font-medium">{u.name}</td>
                   <td className="px-3 py-2">{u.email}</td>
+                  <td className="px-3 py-2 whitespace-nowrap">{u.mobile || "—"}</td>
                   <td className="px-3 py-2">{[u.city, u.state].filter(Boolean).join(", ")}</td>
                   <td className="px-3 py-2">
                     <span className={
@@ -165,6 +168,9 @@ export default function AdminPage() {
                   </td>
                   <td className="px-3 py-2">{u.is_active ? "Yes" : "No"}</td>
                   <td className="px-3 py-2">{u.prediction_count}</td>
+                  <td className="px-3 py-2 whitespace-nowrap text-slate-500">
+                    {u.created_at ? new Date(u.created_at).toLocaleDateString() : "—"}
+                  </td>
                   <td className="px-3 py-2">
                     <div className="flex flex-wrap gap-1.5">
                       {u.status !== "approved" &&
@@ -180,7 +186,7 @@ export default function AdminPage() {
                 </tr>
               ))}
               {users.length === 0 && (
-                <tr><td colSpan={7} className="px-3 py-6 text-center text-slate-500">No users.</td></tr>
+                <tr><td colSpan={9} className="px-3 py-6 text-center text-slate-500">No users.</td></tr>
               )}
             </tbody>
           </table>
