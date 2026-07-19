@@ -87,4 +87,5 @@ export const api = {
     request(`/api/admin/predictions${q ? `?q=${encodeURIComponent(q)}` : ""}`),
   meta: () => request("/api/dataset/meta"),
   datasetStats: () => request("/api/dataset/stats"),
+  summary: () => request("/api/dataset/summary", {}, false),
 };

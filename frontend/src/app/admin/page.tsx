@@ -73,7 +73,7 @@ export default function AdminPage() {
   if (!ready) return null;
 
   return (
-    <div className="space-y-8">
+    <div className="mx-auto max-w-6xl space-y-8 px-4 py-8">
       <h1 className="text-2xl font-bold">Admin Dashboard</h1>
 
       {/* stats */}

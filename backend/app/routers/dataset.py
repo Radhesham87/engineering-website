@@ -44,6 +44,21 @@ def stats(_: User = Depends(get_admin)):
         raise HTTPException(400, str(e))
 
 
+@router.get("/summary")
+def public_summary():
+    """Public dataset counts for the landing page (no auth required)."""
+    try:
+        s = dataset_stats()
+        return {
+            "records": s["rows"],
+            "institutes": s["colleges"],
+            "branches": s["branches"],
+            "districts": s["districts"],
+        }
+    except Exception:  # dataset missing / unreadable → safe zeros
+        return {"records": 0, "institutes": 0, "branches": 0, "districts": 0}
+
+
 @router.post("/upload")
 async def upload(file: UploadFile = File(...), _: User = Depends(get_admin)):
     if not file.filename.lower().endswith((".csv", ".gz", ".xlsx", ".xls")):

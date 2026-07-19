@@ -54,7 +54,7 @@ export default function HistoryPage() {
   if (!ready) return null;
 
   return (
-    <div className="space-y-6">
+    <div className="mx-auto max-w-6xl space-y-6 px-4 py-8">
       <h1 className="text-2xl font-bold">Your Prediction History</h1>
       {loading ? (
         <p className="text-slate-500">Loading…</p>

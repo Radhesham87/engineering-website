@@ -8,17 +8,13 @@ export const metadata: Metadata = {
   description: "Predict engineering colleges by MH-CET or JEE-Main percentile / rank.",
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body>
         <Providers>
           <Navbar />
-          <main className="mx-auto max-w-6xl px-4 py-8">{children}</main>
+          <main>{children}</main>
         </Providers>
       </body>
     </html>
