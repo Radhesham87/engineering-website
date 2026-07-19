@@ -1,0 +1,30 @@
+# ─────────────────────────────────────────────────────────────────────────
+# Netlify configuration — deploys the Next.js FRONTEND only.
+#
+# The FastAPI backend is a long-running Python server and does NOT run on
+# Netlify. Keep the backend on Render (see render.yaml) and point the
+# frontend at it using the NEXT_PUBLIC_API_URL environment variable.
+#
+# In the Netlify UI:  Site configuration → Environment variables
+#     NEXT_PUBLIC_API_URL = https://<your-render-backend>.onrender.com
+#
+# NOTE: NEXT_PUBLIC_* values are baked in at BUILD time, so set this variable
+# BEFORE the first deploy, and trigger a redeploy whenever you change it.
+# After deploying, add your Netlify URL to FRONTEND_ORIGINS on Render (CORS).
+# ─────────────────────────────────────────────────────────────────────────
+
+[build]
+  # The Next.js app lives in the frontend/ subdirectory. All paths below are
+  # resolved relative to this base directory.
+  base    = "frontend"
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  # Matches the Node version used in CI (.github/workflows/ci.yml).
+  NODE_VERSION = "20"
+
+# Official Netlify runtime for Next.js (SSR, routing, image handling, etc.).
+# Netlify auto-installs this when it detects Next.js; declaring it is explicit.
+[[plugins]]
+  package = "@netlify/plugin-nextjs"

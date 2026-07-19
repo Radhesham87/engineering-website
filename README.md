@@ -16,7 +16,7 @@ dashboard, and Excel exports.
 | Database | PostgreSQL (SQLite for local dev) |
 | Auth | JWT (PyJWT) + bcrypt password hashing |
 | PDF / Excel | ReportLab, openpyxl |
-| Deploy | Frontend → Vercel · Backend → Render · DB → Render Postgres |
+| Deploy | Frontend → Netlify · Backend → Render · DB → Render Postgres |
 
 ## Project structure
 
@@ -117,11 +117,27 @@ docker compose up --build
    `FRONTEND_ORIGINS` (your Vercel URL). `JWT_SECRET` is auto-generated;
    Python is pinned to 3.12.9.
 
-### Frontend → Vercel
+### Frontend → Netlify
 
-1. **New Project** → import the repo → set **Root Directory** to `frontend`.
-2. Add env var `NEXT_PUBLIC_API_URL` = your Render backend URL.
-3. Deploy, then add the Vercel URL to `FRONTEND_ORIGINS` on Render for CORS.
+The Next.js frontend deploys to Netlify; config lives in `netlify.toml` at the
+repo root (base directory `frontend`, `@netlify/plugin-nextjs` runtime).
+
+1. Push this repo to GitHub (already at
+   `github.com/Radhesham87/engineering-website`).
+2. Netlify → **Add new site → Import an existing project** → pick the repo.
+   Netlify reads `netlify.toml` automatically (base `frontend`, build
+   `npm run build`, publish `.next`), so you can accept the detected settings.
+3. **Site configuration → Environment variables** → add
+   `NEXT_PUBLIC_API_URL` = your Render backend URL
+   (e.g. `https://engineering-predictor-api.onrender.com`).
+   This is baked in at build time, so set it **before** deploying and
+   **redeploy** after any change.
+4. Deploy. Then add your Netlify URL (e.g. `https://<site>.netlify.app`) to
+   `FRONTEND_ORIGINS` on Render so CORS allows the frontend.
+
+> **Why not the backend on Netlify too?** Netlify hosts static sites and short
+> serverless functions — it can't run a long-lived FastAPI/uvicorn server with
+> persistent Postgres connections. Keep the backend on Render (`render.yaml`).
 
 ---
 
