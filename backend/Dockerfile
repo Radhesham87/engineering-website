@@ -11,5 +11,7 @@ RUN pip install --upgrade pip && pip install -r requirements.txt
 
 COPY . .
 
-EXPOSE 8000
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+EXPOSE 8080
+# Respect the platform-provided $PORT (Cloud Run sets 8080). Shell form so
+# the variable expands; falls back to 8080 when PORT is unset (local docker).
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8080}"]
