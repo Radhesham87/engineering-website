@@ -162,21 +162,48 @@ def predict(exam: str, mode: str, value: float, category: str,
     else:
         percentile = float(value)
 
-    d = d[d["cutoff_percentile"].notna()].copy()
-    if exam.upper() == "JEE-MAIN" and mode == "rank":
-        d = d[d["cutoff_rank"].between(value - rank_lo, value + rank_up)]
-    else:
-        d = d[(d["cutoff_percentile"] <= percentile + pct_up) &
-              (d["cutoff_percentile"] >= percentile - pct_lo)]
+    # `base` = all rows matching category / branch / district / quota filters,
+    # regardless of the student's score.
+    base = d[d["cutoff_percentile"].notna()].copy()
 
-    d = d.sort_values(["cutoff_percentile", "cutoff_rank"],
-                      ascending=[False, True], na_position="last")
+    # normal, score-matched rows
+    if exam.upper() == "JEE-MAIN" and mode == "rank":
+        scored = base[base["cutoff_rank"].between(value - rank_lo,
+                                                  value + rank_up)]
+    else:
+        scored = base[(base["cutoff_percentile"] <= percentile + pct_up) &
+                      (base["cutoff_percentile"] >= percentile - pct_lo)]
+
+    # priority institutes: shown at the top for ANY percentile / rank
+    # (the other filters still apply), pinned in the admin-listed order.
+    pri = [x.strip().upper() for x in priority.replace("\n", ",").split(",")
+           if x.strip()]
+    order = {code: i for i, code in enumerate(pri)}
+    code_u = base["college_code"].astype(str).str.upper()
+    if pri:
+        pri_df = base[code_u.isin(order)].copy()
+        # drop priority codes from the scored set to avoid duplicate rows
+        scored = scored[~scored["college_code"].astype(str)
+                        .str.upper().isin(order)]
+        pri_df["__prio"] = pri_df["college_code"].astype(str).str.upper().map(order)
+        pri_df = pri_df.sort_values(
+            ["__prio", "cutoff_percentile", "cutoff_rank"],
+            ascending=[True, False, True], na_position="last")
+    else:
+        pri_df = base.iloc[0:0]
+
+    scored = scored.sort_values(["cutoff_percentile", "cutoff_rank"],
+                                ascending=[False, True], na_position="last")
+
+    ordered = pd.concat([pri_df, scored])
+    pri_codes = set(order)
 
     rows = []
-    for i, (_, r) in enumerate(d.iterrows(), 1):
+    for i, (_, r) in enumerate(ordered.iterrows(), 1):
+        code = str(r["college_code"])
         rows.append({
             "sr_no": i,
-            "college_code": str(r["college_code"]),
+            "college_code": code,
             "college_name": str(r["college_name"]),
             "district": str(r["district"]) or "-",
             "branch": str(r["branch"]),
@@ -186,20 +213,8 @@ def predict(exam: str, mode: str, value: float, category: str,
                                   if pd.notna(r["cutoff_percentile"]) else None),
             "cutoff_rank": (int(r["cutoff_rank"])
                             if pd.notna(r["cutoff_rank"]) else None),
-            "priority": False,
+            "priority": code.upper() in pri_codes,
         })
-
-    # pin admin-configured priority institutes to the top, in listed order
-    pri = [x.strip().upper() for x in priority.replace("\n", ",").split(",")
-           if x.strip()]
-    if pri:
-        order = {code: i for i, code in enumerate(pri)}
-        for r in rows:
-            if r["college_code"].upper() in order:
-                r["priority"] = True
-        rows.sort(key=lambda r: order.get(r["college_code"].upper(), 10 ** 9))
-        for i, r in enumerate(rows, 1):
-            r["sr_no"] = i
 
     return {"show_category": show_category, "count": len(rows),
             "results": rows}
