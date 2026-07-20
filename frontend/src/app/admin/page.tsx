@@ -32,9 +32,9 @@ export default function AdminPage() {
   const [filter, setFilter] = useState("");
   const [search, setSearch] = useState("");
   const [win, setWin] = useState<Win>({
-    pct_upper_buffer: 2, pct_lower_buffer: 100,
+    pct_upper_buffer: 2, pct_lower_buffer: 10,
     rank_lower_buffer: 2000, rank_upper_buffer: 15000,
-    priority_institutes: "",
+    priority_institutes: "16006, 3012, 6271, 3215, 3119, 6273, 6276, 6175, 6007, 6072",
   });
 
   const load = useCallback(async () => {
