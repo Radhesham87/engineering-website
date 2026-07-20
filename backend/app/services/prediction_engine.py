@@ -64,6 +64,21 @@ def load_dataset() -> pd.DataFrame:
         return df
 
 
+# MH-CET category codes to display (grouped; each maps to detailed H/O/S variants
+# in the dataset, e.g. GOPEN -> GOPENH/GOPENO/GOPENS). Order preserved as requested.
+MHTCET_CATEGORIES = [
+    "GOPEN", "GOBC", "GSEBC", "EWS", "GNT1", "GNT2", "GNT3", "GSC", "GST",
+    "GVJ", "TFWS", "DEFROBC", "DEFROPEN", "DEFRSEBC", "DEFRNT1", "DEFRNT2",
+    "DEFRNT3", "DEFRSC", "DEFRST", "DEFRVJ",
+]
+# a few display codes don't literally prefix the dataset code, so remap those
+_CAT_PREFIX = {"DEFROPEN": "DEFOPEN"}
+
+
+def _cat_prefix(cat: str) -> str:
+    return _CAT_PREFIX.get(cat.upper(), cat.upper())
+
+
 def meta() -> dict:
     df = load_dataset()
     out = {"exams": sorted(e for e in df["exam"].unique() if e), "by_exam": {}}
@@ -71,7 +86,8 @@ def meta() -> dict:
         sub = df[df["exam"] == exam]
         out["by_exam"][exam] = {
             "branches": sorted(b for b in sub["branch"].unique() if b),
-            "categories": sorted(c for c in sub["category"].unique() if c),
+            "categories": (MHTCET_CATEGORIES if exam.upper() == "MH-CET"
+                           else sorted(c for c in sub["category"].unique() if c)),
             "districts": sorted(d for d in sub["district"].unique() if d),
             "quotas": sorted(s for s in sub["status"].unique() if s),
         }
@@ -113,7 +129,7 @@ def predict(exam: str, mode: str, value: float, category: str,
 
     show_category = exam.upper() == "MH-CET"
     if show_category and category:
-        d = d[d["category_u"] == category.upper()]
+        d = d[d["category_u"].str.startswith(_cat_prefix(category))]
 
     brs = [b for b in (branches or []) if b]
     if brs:
@@ -167,7 +183,7 @@ def college_list(exam: str, category: str = "", quotas=None,
     d = df[df["exam_u"] == exam.upper()]
     show_category = exam.upper() == "MH-CET"
     if show_category and category:
-        d = d[d["category_u"] == category.upper()]
+        d = d[d["category_u"].str.startswith(_cat_prefix(category))]
     brs = [b for b in (branches or []) if b]
     if brs:
         d = d[d["branch_u"].isin([b.upper() for b in brs])]
