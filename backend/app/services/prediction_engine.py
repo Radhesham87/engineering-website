@@ -107,6 +107,7 @@ def predict(exam: str, mode: str, value: float, category: str,
     pct_up = float(w.get("pct_upper_buffer", settings.PCT_UPPER_BUFFER))
     rank_lo = int(w.get("rank_lower_buffer", settings.RANK_LOWER_BUFFER))
     rank_up = int(w.get("rank_upper_buffer", settings.RANK_UPPER_BUFFER))
+    pct_lo = float(w.get("pct_lower_buffer", settings.PCT_LOWER_BUFFER))
 
     d = df[df["exam_u"] == exam.upper()]
 
@@ -134,7 +135,8 @@ def predict(exam: str, mode: str, value: float, category: str,
     if exam.upper() == "JEE-MAIN" and mode == "rank":
         d = d[d["cutoff_rank"].between(value - rank_lo, value + rank_up)]
     else:
-        d = d[d["cutoff_percentile"] <= percentile + pct_up]
+        d = d[(d["cutoff_percentile"] <= percentile + pct_up) &
+              (d["cutoff_percentile"] >= percentile - pct_lo)]
 
     d = d.sort_values(["cutoff_percentile", "cutoff_rank"],
                       ascending=[False, True], na_position="last")

@@ -26,6 +26,13 @@ def stats(db: Session = Depends(get_db), _: User = Depends(get_admin)):
     todays = sum(1 for p in db.query(Prediction).all()
                  if p.created_at and p.created_at.date() == today)
     dl = db.query(Setting).filter(Setting.key == "total_downloads").first()
+    by_today: dict[str, int] = {}
+    by_total: dict[str, int] = {}
+    for p in db.query(Prediction).all():
+        ex = p.exam or "MH-CET"
+        by_total[ex] = by_total.get(ex, 0) + 1
+        if p.created_at and p.created_at.date() == today:
+            by_today[ex] = by_today.get(ex, 0) + 1
     return StatsOut(
         total_users=db.query(User).filter(User.role == Role.user).count(),
         pending_users=db.query(User).filter(
@@ -36,7 +43,8 @@ def stats(db: Session = Depends(get_db), _: User = Depends(get_admin)):
             User.status == Status.rejected).count(),
         total_predictions=db.query(Prediction).count(),
         todays_predictions=todays,
-        total_downloads=int(dl.value) if dl and dl.value else 0)
+        total_downloads=int(dl.value) if dl and dl.value else 0,
+        by_exam_today=by_today, by_exam_total=by_total)
 
 
 @router.get("/users", response_model=list[UserOut])
@@ -53,6 +61,7 @@ def users(status: str | None = None, q: str | None = None,
     for u in query.order_by(User.created_at.desc()).all():
         d = UserOut.model_validate(u)
         d.prediction_count = len(u.predictions)
+        d.session_active = bool(u.session_id)
         out.append(d)
     return out
 
@@ -122,6 +131,16 @@ def delete_user(uid: int, db: Session = Depends(get_db),
     return {"deleted": uid}
 
 
+@router.post("/users/{uid}/logout")
+def force_logout(uid: int, db: Session = Depends(get_db),
+                 _: User = Depends(get_admin)):
+    """Clear the user's active session so their device is signed out."""
+    u = _get_user(uid, db)
+    u.session_id = None
+    db.commit()
+    return {"id": uid, "logged_out": True}
+
+
 # ---------- prediction window ----------
 @router.get("/window", response_model=WindowIn)
 def get_window(db: Session = Depends(get_db), _: User = Depends(get_admin)):
@@ -130,6 +149,8 @@ def get_window(db: Session = Depends(get_db), _: User = Depends(get_admin)):
     return WindowIn(
         pct_upper_buffer=float(d.get("pct_upper_buffer",
                                      settings.PCT_UPPER_BUFFER)),
+        pct_lower_buffer=float(d.get("pct_lower_buffer",
+                                     settings.PCT_LOWER_BUFFER)),
         rank_lower_buffer=int(float(d.get("rank_lower_buffer",
                                           settings.RANK_LOWER_BUFFER))),
         rank_upper_buffer=int(float(d.get("rank_upper_buffer",

@@ -12,7 +12,8 @@ from app.services.prediction_engine import predict as run_predict
 
 router = APIRouter(prefix="/api/prediction", tags=["prediction"])
 
-_WIN_KEYS = ("pct_upper_buffer", "rank_lower_buffer", "rank_upper_buffer")
+_WIN_KEYS = ("pct_upper_buffer", "pct_lower_buffer",
+             "rank_lower_buffer", "rank_upper_buffer")
 
 
 def _window(db: Session) -> dict:

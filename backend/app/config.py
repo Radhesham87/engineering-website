@@ -27,6 +27,7 @@ class Settings(BaseSettings):
     # percentile mode: include cutoffs at/below (percentile + upper), and a
     #   small reach band above via the same upper buffer.
     PCT_UPPER_BUFFER: float = 2.0     # percentile points above student
+    PCT_LOWER_BUFFER: float = 100.0   # percentile points below student (100 = no lower bound)
     RANK_LOWER_BUFFER: int = 2000     # JEE rank: down to rank - this
     RANK_UPPER_BUFFER: int = 15000    # JEE rank: up to rank + this
 

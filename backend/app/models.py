@@ -44,6 +44,9 @@ class User(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=_now)
     last_login: Mapped[datetime | None] = mapped_column(DateTime,
                                                         nullable=True)
+    # single-device login: active session id (newest login wins)
+    session_id: Mapped[str | None] = mapped_column(String(64),
+                                                    nullable=True)
 
     predictions: Mapped[list["Prediction"]] = relationship(
         back_populates="user", cascade="all, delete-orphan")

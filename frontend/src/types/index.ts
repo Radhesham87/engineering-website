@@ -55,6 +55,7 @@ export interface AdminUser {
   created_at: string;
   last_login: string | null;
   prediction_count: number;
+  session_active: boolean;
 }
 
 export interface Stats {
@@ -65,4 +66,6 @@ export interface Stats {
   total_predictions: number;
   todays_predictions: number;
   total_downloads: number;
+  by_exam_today: Record<string, number>;
+  by_exam_total: Record<string, number>;
 }

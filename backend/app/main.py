@@ -9,6 +9,7 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 
 from app.config import settings
+from sqlalchemy import text
 from app.database import Base, SessionLocal, engine
 from app.models import Role, Status, User
 from app.routers import admin, auth, dataset, history, prediction
@@ -42,6 +43,14 @@ app.add_middleware(
 @app.on_event("startup")
 def on_startup():
     Base.metadata.create_all(bind=engine)
+    # lightweight migration: ensure the single-device session column exists
+    try:
+        with engine.begin() as conn:
+            conn.execute(text(
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS "
+                "session_id VARCHAR(64)"))
+    except Exception as e:  # sqlite / already exists
+        log.info("session_id migration skipped: %s", e)
     db = SessionLocal()
     try:
         admin_user = db.query(User).filter(

@@ -20,6 +20,10 @@ async function request<T>(
     if (t) headers["Authorization"] = `Bearer ${t}`;
   }
   const res = await fetch(`${BASE}${path}`, { ...options, headers });
+  if (res.status === 401 && auth && typeof window !== "undefined") {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+  }
   if (!res.ok) {
     let detail = `Request failed (${res.status})`;
     try {

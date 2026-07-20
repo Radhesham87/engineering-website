@@ -41,6 +41,7 @@ class UserOut(BaseModel):
     created_at: datetime
     last_login: datetime | None
     prediction_count: int = 0
+    session_active: bool = False
 
     class Config:
         from_attributes = True
@@ -95,6 +96,7 @@ class PredictOut(BaseModel):
 # ---------- admin ----------
 class WindowIn(BaseModel):
     pct_upper_buffer: float = Field(ge=0, le=50)
+    pct_lower_buffer: float = Field(ge=0, le=100, default=100.0)
     rank_lower_buffer: int = Field(ge=0, le=200000)
     rank_upper_buffer: int = Field(ge=0, le=500000)
 
@@ -107,3 +109,5 @@ class StatsOut(BaseModel):
     total_predictions: int
     todays_predictions: int
     total_downloads: int
+    by_exam_today: dict[str, int] = {}
+    by_exam_total: dict[str, int] = {}
