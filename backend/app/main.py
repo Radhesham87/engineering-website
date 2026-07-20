@@ -42,6 +42,18 @@ app.add_middleware(
 
 @app.on_event("startup")
 def on_startup():
+    # Which database are we actually using? (postgresql = persistent Neon,
+    # sqlite = EPHEMERAL container file that is wiped on every redeploy)
+    backend = settings.DATABASE_URL.split(":", 1)[0].split("+")[0]
+    if backend.startswith("sqlite"):
+        log.warning("=" * 60)
+        log.warning("USING EPHEMERAL SQLite DATABASE — ALL USERS WILL BE LOST "
+                    "ON EVERY REDEPLOY. Set the DATABASE_URL env var to your "
+                    "Neon Postgres connection string.")
+        log.warning("=" * 60)
+    else:
+        log.info("Using persistent database backend: %s", backend)
+
     Base.metadata.create_all(bind=engine)
     # lightweight migration: ensure the single-device session column exists
     try:
@@ -68,7 +80,16 @@ def on_startup():
 
 @app.get("/api/health")
 def health():
-    return {"status": "ok", "app": settings.APP_NAME}
+    backend = settings.DATABASE_URL.split(":", 1)[0].split("+")[0]
+    info = {"status": "ok", "app": settings.APP_NAME, "database": backend,
+            "persistent": not backend.startswith("sqlite")}
+    try:
+        db = SessionLocal()
+        info["user_count"] = db.query(User).count()
+        db.close()
+    except Exception:
+        pass
+    return info
 
 
 app.include_router(auth.router)
