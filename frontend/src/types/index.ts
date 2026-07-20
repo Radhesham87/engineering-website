@@ -15,6 +15,7 @@ export interface CollegeRow {
   status: string;
   cutoff_percentile: number | null;
   cutoff_rank: number | null;
+  priority?: boolean;
 }
 
 export interface PredictResult {

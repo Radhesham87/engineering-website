@@ -20,6 +20,7 @@ const STAT_CARDS: [keyof Stats, string][] = [
 type Win = {
   pct_upper_buffer: number; pct_lower_buffer: number;
   rank_lower_buffer: number; rank_upper_buffer: number;
+  priority_institutes: string;
 };
 
 export default function AdminPage() {
@@ -33,6 +34,7 @@ export default function AdminPage() {
   const [win, setWin] = useState<Win>({
     pct_upper_buffer: 2, pct_lower_buffer: 100,
     rank_lower_buffer: 2000, rank_upper_buffer: 15000,
+    priority_institutes: "",
   });
 
   const load = useCallback(async () => {
@@ -166,6 +168,13 @@ export default function AdminPage() {
             <input className="input" type="number" value={win.rank_upper_buffer}
               onChange={(e) => setWin({ ...win, rank_upper_buffer: +e.target.value })} />
           </div>
+        </div>
+        <div className="mt-4">
+          <label className="label">Priority institute codes (comma separated, pinned in order)</label>
+          <input className="input" placeholder="e.g. 16006, 3012, 6271, 3215"
+            value={win.priority_institutes}
+            onChange={(e) => setWin({ ...win, priority_institutes: e.target.value })} />
+          <p className="mt-1 text-xs text-slate-400">These colleges appear pinned at the top of every prediction and in the PDF.</p>
         </div>
         <p className="mt-2 text-xs text-slate-400">
           −points limits how far below a student&apos;s percentile colleges appear (100 = no limit).

@@ -22,10 +22,17 @@ export function ResultsTable({ data }: { data: PredictResult }) {
         </thead>
         <tbody>
           {data.results.map((r) => (
-            <tr key={r.sr_no} className="border-t border-slate-100 odd:bg-slate-50 dark:border-slate-800 dark:odd:bg-slate-800/40">
+            <tr key={r.sr_no} className={
+              r.priority
+                ? "border-t border-amber-300/40 bg-amber-100 dark:bg-amber-500/15"
+                : "border-t border-slate-100 odd:bg-slate-50 dark:border-slate-800 dark:odd:bg-slate-800/40"
+            }>
               <td className="px-3 py-2">{r.sr_no}</td>
               <td className="px-3 py-2">{r.college_code}</td>
-              <td className="px-3 py-2 font-medium">{r.college_name}</td>
+              <td className="px-3 py-2 font-medium">
+                {r.priority && <span className="mr-1 text-amber-500" title="Priority institute">★</span>}
+                {r.college_name}
+              </td>
               <td className="px-3 py-2">{r.district}</td>
               <td className="px-3 py-2">{r.branch}</td>
               {showCat && <td className="px-3 py-2">{r.category}</td>}

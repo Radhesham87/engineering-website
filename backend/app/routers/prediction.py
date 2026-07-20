@@ -19,7 +19,9 @@ _WIN_KEYS = ("pct_upper_buffer", "pct_lower_buffer",
 def _window(db: Session) -> dict:
     out = {}
     for row in db.query(Setting).all():
-        if row.key in _WIN_KEYS:
+        if row.key == "priority_institutes":
+            out[row.key] = row.value or ""
+        elif row.key in _WIN_KEYS:
             try:
                 out[row.key] = float(row.value)
             except ValueError:

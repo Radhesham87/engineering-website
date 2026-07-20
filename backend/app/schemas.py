@@ -79,6 +79,7 @@ class CollegeRow(BaseModel):
     status: str
     cutoff_percentile: float | None = None
     cutoff_rank: int | None = None
+    priority: bool = False
 
 
 class PredictOut(BaseModel):
@@ -101,6 +102,7 @@ class WindowIn(BaseModel):
     pct_lower_buffer: float = Field(ge=0, le=100, default=100.0)
     rank_lower_buffer: int = Field(ge=0, le=200000)
     rank_upper_buffer: int = Field(ge=0, le=500000)
+    priority_institutes: str = ""
 
 
 class StatsOut(BaseModel):

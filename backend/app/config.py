@@ -30,6 +30,7 @@ class Settings(BaseSettings):
     PCT_LOWER_BUFFER: float = 100.0   # percentile points below student (100 = no lower bound)
     RANK_LOWER_BUFFER: int = 2000     # JEE rank: down to rank - this
     RANK_UPPER_BUFFER: int = 15000    # JEE rank: up to rank + this
+    PRIORITY_INSTITUTES: str = ""     # comma-separated college codes, pinned on top
 
     @property
     def cors_origins(self) -> list[str]:

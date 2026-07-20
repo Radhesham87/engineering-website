@@ -154,7 +154,9 @@ def get_window(db: Session = Depends(get_db), _: User = Depends(get_admin)):
         rank_lower_buffer=int(float(d.get("rank_lower_buffer",
                                           settings.RANK_LOWER_BUFFER))),
         rank_upper_buffer=int(float(d.get("rank_upper_buffer",
-                                          settings.RANK_UPPER_BUFFER))))
+                                          settings.RANK_UPPER_BUFFER))),
+        priority_institutes=d.get("priority_institutes",
+                                  settings.PRIORITY_INSTITUTES))
 
 
 @router.put("/window", response_model=WindowIn)

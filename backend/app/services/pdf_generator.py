@@ -11,6 +11,7 @@ from reportlab.platypus import (Paragraph, SimpleDocTemplate, Spacer, Table,
 
 BLUE = colors.HexColor("#1f4e79")
 LIGHT = colors.HexColor("#eef3f8")
+GOLD = colors.HexColor("#fff3cd")
 
 
 def _footer(canvas, doc):
@@ -88,11 +89,16 @@ def build_prediction_pdf(pred: dict) -> bytes:
     headers = ["Sr.No", "College Code", "College Name", "District", "Branch",
                "Category", "Status", "Cutoff Percentile", "Cutoff Rank"]
     data = [[Paragraph(h, head) for h in headers]]
-    for r in pred["results"]:
+    pri_rows = []
+    for idx, r in enumerate(pred["results"], start=1):
+        name = r["college_name"]
+        if r.get("priority"):
+            name = "\u2605 " + name
+            pri_rows.append(idx)
         data.append([
             Paragraph(str(r["sr_no"]), cell),
             Paragraph(str(r["college_code"]), cell),
-            Paragraph(r["college_name"], cell),
+            Paragraph(name, cell),
             Paragraph(r.get("district", "-"), cell),
             Paragraph(r["branch"], cell),
             Paragraph(r.get("category", "-"), cell),
@@ -104,12 +110,15 @@ def build_prediction_pdf(pred: dict) -> bytes:
     table = Table(data, colWidths=[11 * mm, 18 * mm, 62 * mm, 20 * mm, 48 * mm,
                                    20 * mm, 22 * mm, 24 * mm, 18 * mm],
                   repeatRows=1)
-    table.setStyle(TableStyle([
+    tstyle = [
         ("BACKGROUND", (0, 0), (-1, 0), BLUE),
         ("GRID", (0, 0), (-1, -1), 0.4, colors.grey),
         ("VALIGN", (0, 0), (-1, -1), "TOP"),
         ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, LIGHT]),
-    ]))
+    ]
+    for ri in pri_rows:
+        tstyle.append(("BACKGROUND", (0, ri), (-1, ri), GOLD))
+    table.setStyle(TableStyle(tstyle))
     story.append(table)
     doc.build(story, onFirstPage=_footer, onLaterPages=_footer)
     return buf.getvalue()
