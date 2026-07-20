@@ -57,6 +57,7 @@ class PredictIn(BaseModel):
     branches: list[str] = Field(default_factory=list)   # empty => all
     districts: list[str] = Field(default_factory=list)  # empty => all
     quotas: list[str] = Field(default_factory=list)     # MH-CET seat status
+    gender: str = "gender-neutral"                      # gender-neutral|ladies|any
 
 
 class CollegeListIn(BaseModel):
@@ -65,6 +66,7 @@ class CollegeListIn(BaseModel):
     branches: list[str] = Field(default_factory=list)
     districts: list[str] = Field(default_factory=list)
     quotas: list[str] = Field(default_factory=list)
+    gender: str = "gender-neutral"
 
 
 class CollegeRow(BaseModel):

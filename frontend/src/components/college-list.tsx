@@ -16,6 +16,7 @@ export function CollegeList() {
   const exam = "MH-CET";
 
   const [meta, setMeta] = useState<Meta | null>(null);
+  const [gender, setGender] = useState("gender-neutral");
   const [category, setCategory] = useState("");
   const [quotas, setQuotas] = useState<string[]>([]);
   const [branches, setBranches] = useState<string[]>([]);
@@ -42,7 +43,7 @@ export function CollegeList() {
     setLoading(true);
     try {
       const res = (await api.colleges({
-        exam, category, quotas, branches, districts,
+        exam, category, gender, quotas, branches, districts,
       })) as PredictResult;
       setResult(res);
       if (res.count === 0) toast.info("No colleges matched these filters.");
@@ -61,6 +62,16 @@ export function CollegeList() {
       <aside className="w-full shrink-0 space-y-5 border-b border-slate-800 bg-slate-900/60 p-5 lg:w-80 lg:border-b-0 lg:border-r">
         <h2 className="text-lg font-bold">College List Filters</h2>
         <p className="text-xs text-slate-400">MH-CET · leave a filter empty to include all.</p>
+
+        <div>
+          <label className="label">Gender / Seat Type</label>
+          <select className={`${FIELD} [&>option]:bg-slate-800 [&>option]:text-white`}
+            value={gender} onChange={(e) => setGender(e.target.value)}>
+            <option value="gender-neutral">Gender-Neutral</option>
+            <option value="ladies">Female (Ladies)</option>
+            <option value="any">Any</option>
+          </select>
+        </div>
 
         <div>
           <label className="label">Category</label>

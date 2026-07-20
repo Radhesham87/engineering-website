@@ -25,6 +25,7 @@ export function PredictorForm({ exam }: { exam: "MH-CET" | "JEE-Main" }) {
   const [studentName, setStudentName] = useState("");
   const [mode, setMode] = useState<"percentile" | "rank">("percentile");
   const [value, setValue] = useState("90");
+  const [gender, setGender] = useState("gender-neutral");
   const [category, setCategory] = useState("");
   const [branches, setBranches] = useState<string[]>([]);
   const [districts, setDistricts] = useState<string[]>([]);
@@ -65,6 +66,7 @@ export function PredictorForm({ exam }: { exam: "MH-CET" | "JEE-Main" }) {
         student_name: studentName, exam, mode, value: num,
         category: isMhtcet ? category : "", branches, districts,
         quotas: isMhtcet ? quotas : [],
+        gender: isMhtcet ? gender : "gender-neutral",
       })) as PredictResult;
       setResult(res);
       if (res.count === 0) toast.info("No colleges matched these filters.");
@@ -131,6 +133,18 @@ export function PredictorForm({ exam }: { exam: "MH-CET" | "JEE-Main" }) {
               className="rounded-lg border border-slate-700 px-3 text-lg hover:bg-slate-800">+</button>
           </div>
         </div>
+
+        {isMhtcet && (
+          <div>
+            <label className="label">Gender / Seat Type</label>
+            <select className={`${FIELD} [&>option]:bg-slate-800 [&>option]:text-white`}
+              value={gender} onChange={(e) => setGender(e.target.value)}>
+              <option value="gender-neutral">Gender-Neutral</option>
+              <option value="ladies">Female (Ladies)</option>
+              <option value="any">Any</option>
+            </select>
+          </div>
+        )}
 
         {isMhtcet && (
           <div>

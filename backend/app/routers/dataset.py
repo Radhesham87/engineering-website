@@ -66,7 +66,8 @@ def colleges(body: CollegeListIn, _: User = Depends(get_approved_user)):
     """MH-CET college list filtered by category / quota / branch / district."""
     try:
         return college_list(body.exam, body.category, body.quotas,
-                            body.branches, body.districts)
+                            body.branches, body.districts,
+                            gender=body.gender)
     except FileNotFoundError:
         raise HTTPException(404, "No dataset uploaded yet.")
     except ValueError as e:

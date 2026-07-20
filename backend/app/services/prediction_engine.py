@@ -64,19 +64,31 @@ def load_dataset() -> pd.DataFrame:
         return df
 
 
-# MH-CET category codes to display (grouped; each maps to detailed H/O/S variants
-# in the dataset, e.g. GOPEN -> GOPENH/GOPENO/GOPENS). Order preserved as requested.
+# MH-CET category codes shown in the Category box (prefix-less). The Gender /
+# Seat Type control supplies the G (gender-neutral) / L (ladies) prefix, so
+# e.g. Gender-Neutral + OPEN -> GOPEN*, Female + OPEN -> LOPEN*, Any -> both.
 MHTCET_CATEGORIES = [
-    "GOPEN", "GOBC", "GSEBC", "EWS", "GNT1", "GNT2", "GNT3", "GSC", "GST",
-    "GVJ", "TFWS", "DEFROBC", "DEFROPEN", "DEFRSEBC", "DEFRNT1", "DEFRNT2",
+    "OPEN", "OBC", "SEBC", "EWS", "NT1", "NT2", "NT3", "SC", "ST", "VJ",
+    "TFWS", "DEFROBC", "DEFROPEN", "DEFRSEBC", "DEFRNT1", "DEFRNT2",
     "DEFRNT3", "DEFRSC", "DEFRST", "DEFRVJ",
 ]
-# a few display codes don't literally prefix the dataset code, so remap those
+# only these have gender (G) / ladies (L) prefixed variants in the dataset
+_GL_CATEGORIES = {"OPEN", "OBC", "SEBC", "NT1", "NT2", "NT3", "SC", "ST", "VJ"}
+# display codes that don't literally prefix the dataset code
 _CAT_PREFIX = {"DEFROPEN": "DEFOPEN"}
 
 
-def _cat_prefix(cat: str) -> str:
-    return _CAT_PREFIX.get(cat.upper(), cat.upper())
+def _category_prefixes(category: str, gender: str) -> list[str]:
+    """Dataset category prefixes for a selected category + gender/seat type."""
+    cat = category.upper()
+    if cat in _GL_CATEGORIES:
+        g = (gender or "gender-neutral").lower()
+        if g in ("ladies", "female"):
+            return ["L" + cat]
+        if g == "any":
+            return ["G" + cat, "L" + cat]
+        return ["G" + cat]                      # gender-neutral (default)
+    return [_CAT_PREFIX.get(cat, cat)]          # EWS / TFWS / DEF*: no gender
 
 
 def meta() -> dict:
@@ -117,6 +129,7 @@ def _pct_from_rank(sub: pd.DataFrame, rank: float):
 def predict(exam: str, mode: str, value: float, category: str,
             branches: list[str], districts: list[str],
             quotas: list[str] | None = None,
+            gender: str = "gender-neutral",
             window: dict | None = None) -> dict:
     df = load_dataset()
     w = window or {}
@@ -129,7 +142,8 @@ def predict(exam: str, mode: str, value: float, category: str,
 
     show_category = exam.upper() == "MH-CET"
     if show_category and category:
-        d = d[d["category_u"].str.startswith(_cat_prefix(category))]
+        prefs = tuple(_category_prefixes(category, gender))
+        d = d[d["category_u"].str.startswith(prefs)]
 
     brs = [b for b in (branches or []) if b]
     if brs:
@@ -177,13 +191,15 @@ def predict(exam: str, mode: str, value: float, category: str,
 
 
 def college_list(exam: str, category: str = "", quotas=None,
-                 branches=None, districts=None, limit: int = 2000) -> dict:
+                 branches=None, districts=None, limit: int = 2000,
+                 gender: str = "gender-neutral") -> dict:
     """List MH-CET colleges (with cutoffs) matching filters — no score needed."""
     df = load_dataset()
     d = df[df["exam_u"] == exam.upper()]
     show_category = exam.upper() == "MH-CET"
     if show_category and category:
-        d = d[d["category_u"].str.startswith(_cat_prefix(category))]
+        prefs = tuple(_category_prefixes(category, gender))
+        d = d[d["category_u"].str.startswith(prefs)]
     brs = [b for b in (branches or []) if b]
     if brs:
         d = d[d["branch_u"].isin([b.upper() for b in brs])]
