@@ -26,6 +26,7 @@ export function PredictorForm({ exam }: { exam: "MH-CET" | "JEE-Main" }) {
   const [mode, setMode] = useState<"percentile" | "rank">("percentile");
   const [value, setValue] = useState("90");
   const [gender, setGender] = useState("gender-neutral");
+  const [homeDistrict, setHomeDistrict] = useState("");
   const [category, setCategory] = useState("");
   const [branches, setBranches] = useState<string[]>([]);
   const [districts, setDistricts] = useState<string[]>([]);
@@ -67,6 +68,7 @@ export function PredictorForm({ exam }: { exam: "MH-CET" | "JEE-Main" }) {
         category: isMhtcet ? category : "", branches, districts,
         quotas: isMhtcet ? quotas : [],
         gender: isMhtcet ? gender : "gender-neutral",
+        home_district: isMhtcet ? homeDistrict : "",
       })) as PredictResult;
       setResult(res);
       if (res.count === 0) toast.info("No colleges matched these filters.");
@@ -148,6 +150,17 @@ export function PredictorForm({ exam }: { exam: "MH-CET" | "JEE-Main" }) {
 
         {isMhtcet && (
           <div>
+            <label className="label">12th Pass District (Home University)</label>
+            <select className={`${FIELD} [&>option]:bg-slate-800 [&>option]:text-white`}
+              value={homeDistrict} onChange={(e) => setHomeDistrict(e.target.value)}>
+              <option value="">— Select your 12th district —</option>
+              {(meta?.home_districts ?? []).map((d) => <option key={d}>{d}</option>)}
+            </select>
+          </div>
+        )}
+
+        {isMhtcet && (
+          <div>
             <label className="label">Category</label>
             <select className={`${FIELD} [&>option]:bg-slate-800 [&>option]:text-white`} value={category}
               onChange={(e) => setCategory(e.target.value)}>
@@ -197,6 +210,12 @@ export function PredictorForm({ exam }: { exam: "MH-CET" | "JEE-Main" }) {
         {!result && (
           <div className="rounded-xl border border-blue-500/30 bg-blue-500/10 px-5 py-4 text-sm text-blue-200">
             Set your details in the sidebar, then click <b>Predict Colleges</b>.
+          </div>
+        )}
+
+        {result && result.home_university && (
+          <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-2 text-sm text-emerald-200">
+            Your Home University: <b>{result.home_university}</b>
           </div>
         )}
 

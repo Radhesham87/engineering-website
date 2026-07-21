@@ -36,6 +36,7 @@ def predict(body: PredictIn, db: Session = Depends(get_db),
         res = run_predict(body.exam, body.mode, body.value, body.category,
                           body.branches, body.districts,
                           quotas=body.quotas, gender=body.gender,
+                          home_district=body.home_district,
                           window=_window(db))
     except FileNotFoundError:
         raise HTTPException(503, "Prediction dataset is not available.")
@@ -55,7 +56,8 @@ def predict(body: PredictIn, db: Session = Depends(get_db),
         student_name=body.student_name, exam=body.exam, mode=body.mode,
         value=body.value, category=body.category, branches=body.branches,
         districts=body.districts, show_category=res["show_category"],
-        count=res["count"], results=res["results"], prediction_id=row.id)
+        count=res["count"], results=res["results"],
+        home_university=res.get("home_university", ""), prediction_id=row.id)
 
 
 @router.get("/{prediction_id}/pdf")

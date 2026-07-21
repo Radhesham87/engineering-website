@@ -91,9 +91,64 @@ def _category_prefixes(category: str, gender: str) -> list[str]:
     return [_CAT_PREFIX.get(cat, cat)]          # EWS / TFWS / DEF*: no gender
 
 
+# ---- Maharashtra CAP home-university mapping (by district) -------------------
+_U_BAMU = "Dr. Babasaheb Ambedkar Marathwada University"
+_U_SRTM = "Swami Ramanand Teerth Marathwada University, Nanded"
+_U_MUM = "Mumbai University"
+_U_NMU = "Kavayitri Bahinabai Chaudhari North Maharashtra University, Jalgaon"
+_U_SPPU = "Savitribai Phule Pune University"
+_U_SHIV = "Shivaji University"
+_U_SOL = "Punyashlok Ahilyabai Holkar Solapur University"
+_U_SGBA = "Sant Gadge Baba Amravati University"
+_U_RTMN = "Rashtrasant Tukdoji Maharaj Nagpur University"
+_U_GOND = "Gondwana University"
+
+# district (UPPERCASE, incl. old names / city aliases found in the data) -> university
+_UNIVERSITY_BY_DISTRICT = {
+    "CHHATRAPATI SAMBHAJINAGAR": _U_BAMU, "AURANGABAD": _U_BAMU,
+    "BEED": _U_BAMU, "AMBEJOGAI": _U_BAMU, "JALNA": _U_BAMU,
+    "DHARASHIV": _U_BAMU, "OSMANABAD": _U_BAMU, "TULJAPUR": _U_BAMU,
+    "HINGOLI": _U_SRTM, "LATUR": _U_SRTM, "NANDED": _U_SRTM, "PARBHANI": _U_SRTM,
+    "MUMBAI CITY": _U_MUM, "MUMBAI SUBURBAN": _U_MUM, "MUMBAI": _U_MUM,
+    "NAVI MUMBAI": _U_MUM, "PANVEL": _U_MUM, "THANE": _U_MUM, "PALGHAR": _U_MUM,
+    "RAIGAD": _U_MUM, "RATNAGIRI": _U_MUM, "SINDHUDURG": _U_MUM,
+    "DHULE": _U_NMU, "JALGAON": _U_NMU, "NANDURBAR": _U_NMU, "NADURBAR": _U_NMU,
+    "AHMEDNAGAR": _U_SPPU, "AHILYANAGAR": _U_SPPU, "KOPARGAON": _U_SPPU,
+    "NASHIK": _U_SPPU, "PUNE": _U_SPPU,
+    "KOLHAPUR": _U_SHIV, "SANGLI": _U_SHIV, "SATARA": _U_SHIV, "KARAD": _U_SHIV,
+    "SOLAPUR": _U_SOL,
+    "AKOLA": _U_SGBA, "AMRAVATI": _U_SGBA, "BULDANA": _U_SGBA,
+    "BULDHANA": _U_SGBA, "WASHIM": _U_SGBA, "YAVATMAL": _U_SGBA,
+    "BHANDARA": _U_RTMN, "GONDIA": _U_RTMN, "NAGPUR": _U_RTMN, "WARDHA": _U_RTMN,
+    "CHANDRAPUR": _U_GOND, "GADCHIROLI": _U_GOND,
+}
+
+# districts shown in the "12th-pass district" selector (student's home district)
+HOME_DISTRICTS = [
+    "Chhatrapati Sambhajinagar", "Beed", "Jalna", "Dharashiv",
+    "Hingoli", "Latur", "Nanded", "Parbhani",
+    "Mumbai City", "Mumbai Suburban", "Thane", "Palghar", "Raigad",
+    "Ratnagiri", "Sindhudurg",
+    "Dhule", "Jalgaon", "Nandurbar",
+    "Ahmednagar", "Nashik", "Pune",
+    "Kolhapur", "Sangli", "Satara", "Solapur",
+    "Akola", "Amravati", "Buldana", "Washim", "Yavatmal",
+    "Bhandara", "Gondia", "Nagpur", "Wardha",
+    "Chandrapur", "Gadchiroli",
+]
+
+
+def university_of(district: str) -> str | None:
+    """University for a district (handles old names, cities, trailing dots)."""
+    if not district:
+        return None
+    return _UNIVERSITY_BY_DISTRICT.get(district.strip().upper().rstrip("."))
+
+
 def meta() -> dict:
     df = load_dataset()
-    out = {"exams": sorted(e for e in df["exam"].unique() if e), "by_exam": {}}
+    out = {"exams": sorted(e for e in df["exam"].unique() if e),
+           "home_districts": HOME_DISTRICTS, "by_exam": {}}
     for exam in out["exams"]:
         sub = df[df["exam"] == exam]
         out["by_exam"][exam] = {
@@ -126,10 +181,20 @@ def _pct_from_rank(sub: pd.DataFrame, rank: float):
     return float(nearest["cutoff_percentile"].median())
 
 
+def _home_type(college_district: str, home_univ: str | None) -> str:
+    if not home_univ:
+        return "-"
+    cu = university_of(college_district)
+    if not cu:
+        return "-"
+    return "Home University" if cu == home_univ else "Other than Home University"
+
+
 def predict(exam: str, mode: str, value: float, category: str,
             branches: list[str], districts: list[str],
             quotas: list[str] | None = None,
             gender: str = "gender-neutral",
+            home_district: str = "",
             window: dict | None = None) -> dict:
     df = load_dataset()
     w = window or {}
@@ -138,6 +203,7 @@ def predict(exam: str, mode: str, value: float, category: str,
     rank_up = int(w.get("rank_upper_buffer", settings.RANK_UPPER_BUFFER))
     pct_lo = float(w.get("pct_lower_buffer", settings.PCT_LOWER_BUFFER))
     priority = str(w.get("priority_institutes", settings.PRIORITY_INSTITUTES) or "")
+    home_univ = university_of(home_district)
 
     d = df[df["exam_u"] == exam.upper()]
 
@@ -214,10 +280,11 @@ def predict(exam: str, mode: str, value: float, category: str,
             "cutoff_rank": (int(r["cutoff_rank"])
                             if pd.notna(r["cutoff_rank"]) else None),
             "priority": code.upper() in pri_codes,
+            "home_type": _home_type(str(r["district"]), home_univ),
         })
 
     return {"show_category": show_category, "count": len(rows),
-            "results": rows}
+            "results": rows, "home_university": home_univ or ""}
 
 
 def college_list(exam: str, category: str = "", quotas=None,

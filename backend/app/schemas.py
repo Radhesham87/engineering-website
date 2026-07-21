@@ -58,6 +58,7 @@ class PredictIn(BaseModel):
     districts: list[str] = Field(default_factory=list)  # empty => all
     quotas: list[str] = Field(default_factory=list)     # MH-CET seat status
     gender: str = "gender-neutral"                      # gender-neutral|ladies|any
+    home_district: str = ""                             # 12th-pass district (home univ)
 
 
 class CollegeListIn(BaseModel):
@@ -80,6 +81,7 @@ class CollegeRow(BaseModel):
     cutoff_percentile: float | None = None
     cutoff_rank: int | None = None
     priority: bool = False
+    home_type: str = "-"
 
 
 class PredictOut(BaseModel):
@@ -93,6 +95,7 @@ class PredictOut(BaseModel):
     show_category: bool
     count: int
     results: list[CollegeRow]
+    home_university: str = ""
     prediction_id: int | None = None
 
 

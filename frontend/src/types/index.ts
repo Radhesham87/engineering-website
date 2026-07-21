@@ -16,6 +16,7 @@ export interface CollegeRow {
   cutoff_percentile: number | null;
   cutoff_rank: number | null;
   priority?: boolean;
+  home_type?: string;
 }
 
 export interface PredictResult {
@@ -30,6 +31,7 @@ export interface PredictResult {
   count: number;
   results: CollegeRow[];
   prediction_id: number | null;
+  home_university?: string;
 }
 
 export interface ExamMeta {
@@ -42,6 +44,7 @@ export interface ExamMeta {
 export interface Meta {
   exams: string[];
   by_exam: Record<string, ExamMeta>;
+  home_districts: string[];
 }
 
 export interface AdminUser {
