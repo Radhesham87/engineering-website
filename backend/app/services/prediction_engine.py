@@ -222,6 +222,22 @@ def predict(exam: str, mode: str, value: float, category: str,
     if qtas:
         d = d[d["status_u"].isin([q.upper() for q in qtas])]
 
+    # Home-university eligibility (when a 12th-pass district is chosen):
+    #  - at colleges IN the student's home university -> keep Home (…H) + State (…S)
+    #  - at colleges elsewhere                        -> keep Other (…O) + State (…S)
+    # Categories without an H/O/S suffix (MI, ORPHAN) are always kept.
+    if home_univ:
+        cu = d["category_u"]
+        ends_hos = cu.str.endswith(("H", "O", "S"))
+        col_univ = (d["district"].astype(str).str.upper()
+                    .str.rstrip(".").map(_UNIVERSITY_BY_DISTRICT))
+        is_home = col_univ == home_univ
+        keep = (~ends_hos) | (
+            (is_home & cu.str.endswith(("H", "S"))) |
+            ((~is_home) & cu.str.endswith(("O", "S")))
+        )
+        d = d[keep]
+
     if mode == "rank":
         percentile = _pct_from_rank(d if not d.empty else df, value)
         percentile = 0.0 if percentile is None else percentile
