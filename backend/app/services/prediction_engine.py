@@ -222,21 +222,24 @@ def predict(exam: str, mode: str, value: float, category: str,
     if qtas:
         d = d[d["status_u"].isin([q.upper() for q in qtas])]
 
-    # Home-university eligibility (when a 12th-pass district is chosen):
-    #  - at colleges IN the student's home university -> keep Home (…H) + State (…S)
-    #  - at colleges elsewhere                        -> keep Other (…O) + State (…S)
-    # Categories without an H/O/S suffix (MI, ORPHAN) are always kept.
+    # Home-university eligibility, decided by the selected District filter vs the
+    # student's home university (from the 12th-pass district):
+    #   all selected districts in the SAME university      -> keep …H + …S
+    #   all selected districts in a DIFFERENT university   -> keep …O + …S
+    #   mixed, or no district selected                     -> keep …H, …O, …S
+    # (categories without an H/O/S suffix, e.g. MI / ORPHAN, are always kept)
     if home_univ:
-        cu = d["category_u"]
-        ends_hos = cu.str.endswith(("H", "O", "S"))
-        col_univ = (d["district"].astype(str).str.upper()
-                    .str.rstrip(".").map(_UNIVERSITY_BY_DISTRICT))
-        is_home = col_univ == home_univ
-        keep = (~ends_hos) | (
-            (is_home & cu.str.endswith(("H", "S"))) |
-            ((~is_home) & cu.str.endswith(("O", "S")))
-        )
-        d = d[keep]
+        sel_univs = {u for u in (university_of(x) for x in dsts) if u}
+        if sel_univs == {home_univ}:
+            allowed = ("H", "S")
+        elif sel_univs and home_univ not in sel_univs:
+            allowed = ("O", "S")
+        else:
+            allowed = ("H", "O", "S")
+        if allowed != ("H", "O", "S"):
+            cu = d["category_u"]
+            ends_hos = cu.str.endswith(("H", "O", "S"))
+            d = d[(~ends_hos) | cu.str.endswith(allowed)]
 
     if mode == "rank":
         percentile = _pct_from_rank(d if not d.empty else df, value)
