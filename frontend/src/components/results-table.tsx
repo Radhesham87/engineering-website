@@ -2,9 +2,24 @@
 
 import type { PredictResult } from "@/types";
 
-export function ResultsTable({ data }: { data: PredictResult }) {
-  const showCat = data.show_category;
-  const showHome = data.results.some((r) => r.home_type && r.home_type !== "-");
+/**
+ * variant="prediction"  -> Sr.No, College Code, College Name, District,
+ *                          Branch, University, Percentile, Merit Rank
+ * variant="full"        -> also shows Category + Status (College List page)
+ */
+export function ResultsTable({
+  data,
+  variant = "full",
+}: {
+  data: PredictResult;
+  variant?: "prediction" | "full";
+}) {
+  const isPrediction = variant === "prediction";
+  const showCat = data.show_category && !isPrediction;
+  const showStatus = !isPrediction;
+  const showHome =
+    isPrediction || data.results.some((r) => r.home_type && r.home_type !== "-");
+
   return (
     <div className="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-800">
       <table className="w-full text-left text-sm">
@@ -16,10 +31,10 @@ export function ResultsTable({ data }: { data: PredictResult }) {
             <th className="px-3 py-2">District</th>
             <th className="px-3 py-2">Branch</th>
             {showCat && <th className="px-3 py-2">Category</th>}
-            <th className="px-3 py-2">Status</th>
+            {showStatus && <th className="px-3 py-2">Status</th>}
             {showHome && <th className="px-3 py-2">University</th>}
-            <th className="px-3 py-2">Cutoff Percentile</th>
-            <th className="px-3 py-2">Cutoff Rank</th>
+            <th className="px-3 py-2">Percentile</th>
+            <th className="px-3 py-2">Merit Rank</th>
           </tr>
         </thead>
         <tbody>
@@ -38,14 +53,16 @@ export function ResultsTable({ data }: { data: PredictResult }) {
               <td className="px-3 py-2">{r.district}</td>
               <td className="px-3 py-2">{r.branch}</td>
               {showCat && <td className="px-3 py-2">{r.category}</td>}
-              <td className="px-3 py-2">{r.status}</td>
+              {showStatus && <td className="px-3 py-2">{r.status}</td>}
               {showHome && (
                 <td className="px-3 py-2 whitespace-nowrap">
                   {r.home_type === "Home University" ? (
                     <span className="rounded bg-emerald-500/15 px-2 py-0.5 text-emerald-300">Home University</span>
                   ) : r.home_type === "Other than Home University" ? (
                     <span className="text-slate-400">Other than Home</span>
-                  ) : "-"}
+                  ) : (
+                    <span className="text-slate-600">-</span>
+                  )}
                 </td>
               )}
               <td className="px-3 py-2">

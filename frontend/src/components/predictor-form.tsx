@@ -219,7 +219,7 @@ export function PredictorForm({ exam }: { exam: "MH-CET" | "JEE-Main" }) {
               </p>
               <button className="btn" onClick={downloadPdf}>📄 Download PDF</button>
             </div>
-            <ResultsTable data={result} />
+            <ResultsTable data={result} variant="prediction" />
           </>
         )}
 
