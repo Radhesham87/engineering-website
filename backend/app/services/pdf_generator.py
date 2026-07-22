@@ -25,11 +25,14 @@ def _footer(canvas, doc):
     canvas.restoreState()
 
 
-def _join(items, label):
-    if not items:
-        return f"All {label}"
-    txt = ", ".join(items[:8])
-    return txt + (f" (+{len(items) - 8} more)" if len(items) > 8 else "")
+def _university(row: dict) -> str:
+    """Short Home / Other-than-Home label for the University column."""
+    ht = (row.get("home_type") or "-").strip()
+    if ht == "Home University":
+        return "Home University"
+    if ht == "Other than Home University":
+        return "Other than Home"
+    return "-"
 
 
 def build_prediction_pdf(pred: dict) -> bytes:
@@ -38,7 +41,8 @@ def build_prediction_pdf(pred: dict) -> bytes:
                             rightMargin=12 * mm, topMargin=12 * mm,
                             bottomMargin=16 * mm)
     styles = getSampleStyleSheet()
-    cell = ParagraphStyle("cell", parent=styles["Normal"], fontSize=8, leading=10)
+    cell = ParagraphStyle("cell", parent=styles["Normal"], fontSize=8,
+                          leading=10)
     head = ParagraphStyle("head", parent=styles["Normal"], fontSize=8.5,
                           leading=10, textColor=colors.white,
                           fontName="Helvetica-Bold")
@@ -47,26 +51,33 @@ def build_prediction_pdf(pred: dict) -> bytes:
     val = ParagraphStyle("val", parent=styles["Normal"], fontSize=9)
 
     show_cat = pred.get("show_category", True)
-    input_label = "Percentile" if pred["mode"] == "percentile" else "Rank"
-    input_value = (f"{pred['value']:g}" if pred["mode"] == "percentile"
+    is_pct = pred["mode"] == "percentile"
+    input_label = "Percentile" if is_pct else "Rank"
+    input_value = (f"{pred['value']:g}" if is_pct
                    else f"{int(pred['value']):,}")
 
-    details = Table([
-        [Paragraph("Student Name", lbl),
-         Paragraph(pred.get("student_name") or "-", val),
-         Paragraph("Exam", lbl), Paragraph(pred.get("exam", "-"), val),
-         Paragraph(input_label, lbl), Paragraph(input_value, val)],
-        [Paragraph("Category", lbl),
-         Paragraph((pred.get("category") or "-") if show_cat else "N/A", val),
-         Paragraph("Branches", lbl),
-         Paragraph(_join(pred.get("branches"), "Branches"), val),
-         Paragraph("Options", lbl), Paragraph(str(pred["count"]), val)],
-        [Paragraph("Districts", lbl),
-         Paragraph(_join(pred.get("districts"), "Districts"), val),
-         Paragraph("Date", lbl),
-         Paragraph(datetime.now().strftime("%d %b %Y, %I:%M %p"), val),
-         Paragraph("", lbl), Paragraph("", val)],
-    ], colWidths=[24 * mm, 60 * mm, 20 * mm, 74 * mm, 22 * mm, 40 * mm])
+    # ---- header details: Student Name | Percentile or Rank | Category ------
+    rows = [[
+        Paragraph("Student Name", lbl),
+        Paragraph(pred.get("student_name") or "-", val),
+        Paragraph(input_label, lbl),
+        Paragraph(input_value, val),
+        Paragraph("Category", lbl),
+        Paragraph((pred.get("category") or "-") if show_cat else "N/A", val),
+    ]]
+    home_univ = pred.get("home_university") or ""
+    if home_univ:
+        rows.append([
+            Paragraph("Home University", lbl),
+            Paragraph(home_univ, val),
+            Paragraph("Total", lbl),
+            Paragraph(str(pred["count"]), val),
+            Paragraph("Date", lbl),
+            Paragraph(datetime.now().strftime("%d %b %Y"), val),
+        ])
+
+    details = Table(rows, colWidths=[30 * mm, 78 * mm, 24 * mm, 45 * mm,
+                                     24 * mm, 66 * mm])
     details.setStyle(TableStyle([
         ("GRID", (0, 0), (-1, -1), 0.4, colors.HexColor("#c9d6e5")),
         ("BACKGROUND", (0, 0), (0, -1), LIGHT),
@@ -80,14 +91,11 @@ def build_prediction_pdf(pred: dict) -> bytes:
 
     story = [
         Paragraph("Engineering College Predictor", styles["Title"]),
-        Spacer(1, 2 * mm),
-        Paragraph("MH-CET &amp; JEE-Main - Prediction Report",
-                  ParagraphStyle("sub", parent=styles["Normal"], alignment=1,
-                                 fontSize=11, textColor=colors.grey)),
         Spacer(1, 4 * mm), details, Spacer(1, 6 * mm)]
 
+    # ---- results table ----------------------------------------------------
     headers = ["Sr.No", "College Code", "College Name", "District", "Branch",
-               "Category", "Status", "Cutoff Percentile", "Cutoff Rank"]
+               "University", "Percentile", "Merit Rank"]
     data = [[Paragraph(h, head) for h in headers]]
     pri_rows = []
     for idx, r in enumerate(pred["results"], start=1):
@@ -101,14 +109,14 @@ def build_prediction_pdf(pred: dict) -> bytes:
             Paragraph(name, cell),
             Paragraph(r.get("district", "-"), cell),
             Paragraph(r["branch"], cell),
-            Paragraph(r.get("category", "-"), cell),
-            Paragraph(r.get("status", "-"), cell),
+            Paragraph(_university(r), cell),
             Paragraph(f'{r["cutoff_percentile"]:.4f}'
                       if r["cutoff_percentile"] is not None else "-", cell),
             Paragraph(f'{r["cutoff_rank"]:,}'
                       if r["cutoff_rank"] is not None else "-", cell)])
-    table = Table(data, colWidths=[11 * mm, 18 * mm, 62 * mm, 20 * mm, 48 * mm,
-                                   20 * mm, 22 * mm, 24 * mm, 18 * mm],
+
+    table = Table(data, colWidths=[12 * mm, 20 * mm, 76 * mm, 24 * mm,
+                                   58 * mm, 32 * mm, 24 * mm, 21 * mm],
                   repeatRows=1)
     tstyle = [
         ("BACKGROUND", (0, 0), (-1, 0), BLUE),

@@ -9,6 +9,7 @@ from app.models import Prediction, Setting, User
 from app.schemas import PredictIn, PredictOut
 from app.services.pdf_generator import build_prediction_pdf
 from app.services.prediction_engine import predict as run_predict
+from app.services.prediction_engine import university_of
 
 router = APIRouter(prefix="/api/prediction", tags=["prediction"])
 
@@ -70,12 +71,23 @@ def download_pdf(prediction_id: int, db: Session = Depends(get_db),
     if not pred:
         raise HTTPException(404, "Prediction not found.")
 
+    results = pred.results or []
+    # The home university isn't stored on the row; derive it from any result
+    # that was flagged as a Home University college.
+    home_univ = ""
+    for r in results:
+        if r.get("home_type") == "Home University":
+            home_univ = university_of(r.get("district", "")) or ""
+            if home_univ:
+                break
+
     payload = {
         "student_name": pred.student_name, "exam": pred.exam,
         "mode": pred.mode, "value": pred.value, "category": pred.category,
         "branches": pred.branches or [], "districts": pred.districts or [],
         "show_category": pred.exam.upper() == "MH-CET",
-        "count": pred.result_count, "results": pred.results or []}
+        "home_university": home_univ,
+        "count": pred.result_count, "results": results}
     pdf = build_prediction_pdf(payload)
 
     dl = db.query(Setting).filter(Setting.key == "total_downloads").first()

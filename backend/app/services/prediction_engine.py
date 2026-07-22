@@ -127,8 +127,8 @@ _UNIVERSITY_BY_DISTRICT = {
 HOME_DISTRICTS = [
     "Chhatrapati Sambhajinagar", "Beed", "Jalna", "Dharashiv",
     "Hingoli", "Latur", "Nanded", "Parbhani",
-    "Mumbai City", "Mumbai Suburban", "Thane", "Palghar", "Raigad",
-    "Ratnagiri", "Sindhudurg",
+    "Mumbai City", "Mumbai Suburban", "Ratnagiri", "Raigad", "Palghar",
+    "Sindhudurg", "Thane",
     "Dhule", "Jalgaon", "Nandurbar",
     "Ahmednagar", "Nashik", "Pune",
     "Kolhapur", "Sangli", "Satara", "Solapur",
