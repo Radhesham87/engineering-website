@@ -67,7 +67,8 @@ def colleges(body: CollegeListIn, _: User = Depends(get_approved_user)):
     try:
         return college_list(body.exam, body.category, body.quotas,
                             body.branches, body.districts,
-                            gender=body.gender)
+                            gender=body.gender,
+                            home_district=body.home_district)
     except FileNotFoundError:
         raise HTTPException(404, "No dataset uploaded yet.")
     except ValueError as e:

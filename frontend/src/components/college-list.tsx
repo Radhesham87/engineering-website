@@ -9,7 +9,8 @@ import { ResultsTable } from "@/components/results-table";
 import { MultiSelect } from "@/components/multi-select";
 import type { Meta, PredictResult } from "@/types";
 
-/** MH-CET College List — filter by category / quota / branch / district. */
+/** MH-CET College List — filter by gender / home university / category /
+ *  branch / district. */
 export function CollegeList() {
   const { user, ready } = useAuth();
   const router = useRouter();
@@ -17,8 +18,8 @@ export function CollegeList() {
 
   const [meta, setMeta] = useState<Meta | null>(null);
   const [gender, setGender] = useState("gender-neutral");
+  const [homeDistrict, setHomeDistrict] = useState("");
   const [category, setCategory] = useState("");
-  const [quotas, setQuotas] = useState<string[]>([]);
   const [branches, setBranches] = useState<string[]>([]);
   const [districts, setDistricts] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
@@ -43,7 +44,8 @@ export function CollegeList() {
     setLoading(true);
     try {
       const res = (await api.colleges({
-        exam, category, gender, quotas, branches, districts,
+        exam, category, gender, home_district: homeDistrict,
+        branches, districts,
       })) as PredictResult;
       setResult(res);
       if (res.count === 0) toast.info("No colleges matched these filters.");
@@ -74,6 +76,15 @@ export function CollegeList() {
         </div>
 
         <div>
+          <label className="label">12th Pass District (Home University)</label>
+          <select className={`${FIELD} [&>option]:bg-slate-800 [&>option]:text-white`}
+            value={homeDistrict} onChange={(e) => setHomeDistrict(e.target.value)}>
+            <option value="">— Select your 12th district —</option>
+            {(meta?.home_districts ?? []).map((d) => <option key={d}>{d}</option>)}
+          </select>
+        </div>
+
+        <div>
           <label className="label">Category</label>
           <select className={`${FIELD} [&>option]:bg-slate-800 [&>option]:text-white`}
             value={category} onChange={(e) => setCategory(e.target.value)}>
@@ -82,10 +93,6 @@ export function CollegeList() {
           </select>
         </div>
 
-        <MultiSelect label="Quota (seat type)" options={em?.quotas ?? []}
-          selected={quotas} onChange={setQuotas}
-          placeholder="Search quotas…"
-          hint="Empty = All Quotas." />
 
         <MultiSelect label="Branch (select one or more)" options={em?.branches ?? []}
           selected={branches} onChange={setBranches}
@@ -109,13 +116,19 @@ export function CollegeList() {
             <span>🏫</span> MH-CET College List
           </h1>
           <p className="mt-1 text-sm text-slate-400">
-            Browse colleges and their closing cutoffs by category, quota, branch and district.
+            Browse colleges and their closing cutoffs by category, branch and district.
           </p>
         </div>
 
         {!result && (
           <div className="rounded-xl border border-blue-500/30 bg-blue-500/10 px-5 py-4 text-sm text-blue-200">
             Choose your filters in the sidebar, then click <b>Show College List</b>.
+          </div>
+        )}
+
+        {result && result.home_university && (
+          <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-2 text-sm text-emerald-200">
+            Your Home University: <b>{result.home_university}</b>
           </div>
         )}
 

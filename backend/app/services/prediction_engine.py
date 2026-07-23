@@ -315,7 +315,8 @@ def predict(exam: str, mode: str, value: float, category: str,
 
 def college_list(exam: str, category: str = "", quotas=None,
                  branches=None, districts=None, limit: int = 2000,
-                 gender: str = "gender-neutral") -> dict:
+                 gender: str = "gender-neutral",
+                 home_district: str = "") -> dict:
     """List MH-CET colleges (with cutoffs) matching filters — no score needed."""
     df = load_dataset()
     d = df[df["exam_u"] == exam.upper()]
@@ -332,6 +333,21 @@ def college_list(exam: str, category: str = "", quotas=None,
     qtas = [q for q in (quotas or []) if q]
     if qtas:
         d = d[d["status_u"].isin([q.upper() for q in qtas])]
+
+    # same home-university seat rule as the predictor
+    home_univ = university_of(home_district)
+    if home_univ:
+        sel_univs = {u for u in (university_of(x) for x in dsts) if u}
+        if sel_univs == {home_univ}:
+            allowed = ("H", "S")
+        elif sel_univs and home_univ not in sel_univs:
+            allowed = ("O", "S")
+        else:
+            allowed = ("H", "O", "S")
+        if allowed != ("H", "O", "S"):
+            cu = d["category_u"]
+            ends_hos = cu.str.endswith(("H", "O", "S"))
+            d = d[(~ends_hos) | cu.str.endswith(allowed)]
 
     d = d[d["cutoff_percentile"].notna()].copy()
     d = d.sort_values(["cutoff_percentile", "cutoff_rank"],
@@ -351,5 +367,7 @@ def college_list(exam: str, category: str = "", quotas=None,
                                   if pd.notna(r["cutoff_percentile"]) else None),
             "cutoff_rank": (int(r["cutoff_rank"])
                             if pd.notna(r["cutoff_rank"]) else None),
+            "home_type": _home_type(str(r["district"]), home_univ),
         })
-    return {"show_category": show_category, "count": len(rows), "results": rows}
+    return {"show_category": show_category, "count": len(rows),
+            "results": rows, "home_university": home_univ or ""}
