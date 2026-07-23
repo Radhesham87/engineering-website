@@ -28,8 +28,8 @@ class Settings(BaseSettings):
     #   small reach band above via the same upper buffer.
     PCT_UPPER_BUFFER: float = 2.0     # percentile points above student
     PCT_LOWER_BUFFER: float = 10.0    # percentile points below student (100 = no lower bound)
-    RANK_LOWER_BUFFER: int = 2000     # JEE rank: down to rank - this
-    RANK_UPPER_BUFFER: int = 15000    # JEE rank: up to rank + this
+    RANK_LOWER_BUFFER: int = 1500     # merit rank: down to rank - this
+    RANK_UPPER_BUFFER: int = 3000     # merit rank: up to rank + this
     PRIORITY_INSTITUTES: str = "16006, 3012, 6271, 3215, 3119, 6273, 6276, 6175, 6007, 6072"
 
     @property

@@ -33,7 +33,7 @@ export default function AdminPage() {
   const [search, setSearch] = useState("");
   const [win, setWin] = useState<Win>({
     pct_upper_buffer: 2, pct_lower_buffer: 10,
-    rank_lower_buffer: 2000, rank_upper_buffer: 15000,
+    rank_lower_buffer: 1500, rank_upper_buffer: 3000,
     priority_institutes: "16006, 3012, 6271, 3215, 3119, 6273, 6276, 6175, 6007, 6072",
   });
 
@@ -159,12 +159,12 @@ export default function AdminPage() {
               onChange={(e) => setWin({ ...win, pct_lower_buffer: +e.target.value })} />
           </div>
           <div>
-            <label className="label">JEE rank lower buffer (−rank)</label>
+            <label className="label">Rank lower buffer (−rank)</label>
             <input className="input" type="number" value={win.rank_lower_buffer}
               onChange={(e) => setWin({ ...win, rank_lower_buffer: +e.target.value })} />
           </div>
           <div>
-            <label className="label">JEE rank upper buffer (+rank)</label>
+            <label className="label">Rank upper buffer (+rank)</label>
             <input className="input" type="number" value={win.rank_upper_buffer}
               onChange={(e) => setWin({ ...win, rank_upper_buffer: +e.target.value })} />
           </div>

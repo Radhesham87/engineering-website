@@ -242,17 +242,18 @@ def predict(exam: str, mode: str, value: float, category: str,
             d = d[(~ends_hos) | cu.str.endswith(allowed)]
 
     if mode == "rank":
-        percentile = _pct_from_rank(d if not d.empty else df, value)
-        percentile = 0.0 if percentile is None else percentile
+        percentile = 0.0            # not used in rank mode
     else:
         percentile = float(value)
 
     # `base` = all rows matching category / branch / district / quota filters,
     # regardless of the student's score.
-    base = d[d["cutoff_percentile"].notna()].copy()
+    score_col = "cutoff_rank" if mode == "rank" else "cutoff_percentile"
+    base = d[d[score_col].notna()].copy()
 
-    # normal, score-matched rows
-    if exam.upper() == "JEE-MAIN" and mode == "rank":
+    # normal, score-matched rows — rank mode searches ONLY on merit rank,
+    # percentile mode searches only on percentile.
+    if mode == "rank":
         scored = base[base["cutoff_rank"].between(value - rank_lo,
                                                   value + rank_up)]
     else:
@@ -277,8 +278,14 @@ def predict(exam: str, mode: str, value: float, category: str,
     else:
         pri_df = base.iloc[0:0]
 
-    scored = scored.sort_values(["cutoff_percentile", "cutoff_rank"],
-                                ascending=[False, True], na_position="last")
+    if mode == "rank":
+        scored = scored.sort_values(["cutoff_rank", "cutoff_percentile"],
+                                    ascending=[True, False],
+                                    na_position="last")
+    else:
+        scored = scored.sort_values(["cutoff_percentile", "cutoff_rank"],
+                                    ascending=[False, True],
+                                    na_position="last")
 
     ordered = pd.concat([pri_df, scored])
     pri_codes = set(order)

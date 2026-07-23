@@ -114,14 +114,14 @@ export function PredictorForm({ exam }: { exam: "MH-CET" | "JEE-Main" }) {
             </label>
             <label className="flex items-center gap-2">
               <input type="radio" checked={mode === "rank"}
-                onChange={() => setMode("rank")} /> Rank
+                onChange={() => setMode("rank")} /> Merit Rank
             </label>
           </div>
         </div>
 
         <div>
           <label className="label">
-            Your {exam} {mode === "percentile" ? "Percentile" : "Rank"}
+            Your {exam} {mode === "percentile" ? "Percentile" : "Merit Rank"}
           </label>
           <div className="flex items-stretch gap-2">
             <input className={FIELD} type="number" value={value}
