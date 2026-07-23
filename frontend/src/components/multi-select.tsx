@@ -52,7 +52,7 @@ export function MultiSelect({
           <button type="button" className="rounded-md border border-slate-600 px-2 py-1 text-xs text-slate-200 hover:bg-slate-700"
             onClick={() => onChange([])}>Clear</button>
         </div>
-        <div className="max-h-44 overflow-y-auto p-2">
+        <div className="max-h-96 overflow-y-auto p-2">
           {filtered.length === 0 ? (
             <p className="px-2 py-3 text-sm text-slate-400">No matches.</p>
           ) : (

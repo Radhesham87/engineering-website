@@ -95,7 +95,7 @@ export function PredictorForm({ exam }: { exam: "MH-CET" | "JEE-Main" }) {
   return (
     <div className="flex min-h-[calc(100vh-57px)] flex-col bg-slate-950 text-slate-100 lg:flex-row">
       {/* Sidebar */}
-      <aside className="w-full shrink-0 space-y-5 border-b border-slate-800 bg-slate-900/60 p-5 lg:w-80 lg:border-b-0 lg:border-r">
+      <aside className="w-full shrink-0 space-y-5 border-b border-slate-800 bg-slate-900/60 p-5 lg:w-96 lg:border-b-0 lg:border-r xl:w-[420px]">
         <h2 className="text-lg font-bold">Your Details</h2>
 
         <div>

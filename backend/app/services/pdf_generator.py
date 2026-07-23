@@ -11,7 +11,6 @@ from reportlab.platypus import (Paragraph, SimpleDocTemplate, Spacer, Table,
 
 BLUE = colors.HexColor("#1f4e79")
 LIGHT = colors.HexColor("#eef3f8")
-GOLD = colors.HexColor("#fff3cd")
 
 
 def _footer(canvas, doc):
@@ -97,12 +96,10 @@ def build_prediction_pdf(pred: dict) -> bytes:
     headers = ["Sr.No", "College Code", "College Name", "District", "Branch",
                "University", "Percentile", "Merit Rank"]
     data = [[Paragraph(h, head) for h in headers]]
-    pri_rows = []
-    for idx, r in enumerate(pred["results"], start=1):
+    for r in pred["results"]:
         name = r["college_name"]
         if r.get("priority"):
             name = "\u2605 " + name
-            pri_rows.append(idx)
         data.append([
             Paragraph(str(r["sr_no"]), cell),
             Paragraph(str(r["college_code"]), cell),
@@ -120,12 +117,18 @@ def build_prediction_pdf(pred: dict) -> bytes:
                   repeatRows=1)
     tstyle = [
         ("BACKGROUND", (0, 0), (-1, 0), BLUE),
-        ("GRID", (0, 0), (-1, -1), 0.4, colors.grey),
-        ("VALIGN", (0, 0), (-1, -1), "TOP"),
-        ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, LIGHT]),
+        ("BACKGROUND", (0, 1), (-1, -1), colors.white),
+        ("GRID", (0, 0), (-1, -1), 0.4, colors.HexColor("#9aa7b4")),
+        ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+        # standard alignment: numbers centred / right, text left
+        ("ALIGN", (0, 0), (1, -1), "CENTER"),      # Sr.No, College Code
+        ("ALIGN", (5, 0), (5, -1), "CENTER"),      # University
+        ("ALIGN", (6, 0), (7, -1), "RIGHT"),       # Percentile, Merit Rank
+        ("TOPPADDING", (0, 0), (-1, -1), 4),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+        ("LEFTPADDING", (0, 0), (-1, -1), 4),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 4),
     ]
-    for ri in pri_rows:
-        tstyle.append(("BACKGROUND", (0, ri), (-1, ri), GOLD))
     table.setStyle(TableStyle(tstyle))
     story.append(table)
     doc.build(story, onFirstPage=_footer, onLaterPages=_footer)
