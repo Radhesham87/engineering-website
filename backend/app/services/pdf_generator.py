@@ -3,7 +3,6 @@ import io
 import os
 from datetime import datetime
 
-from reportlab.lib.utils import ImageReader
 
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4, landscape
@@ -42,18 +41,18 @@ def _page_decorator(branding: dict | None = None):
         if branding:
             wm = branding.get("watermark_image")
             if wm and os.path.exists(wm):
-                side = 110 * mm
+                side = 130 * mm
                 canvas.drawImage(wm, (page_w - side) / 2,
                                  (page_h - side) / 2, side, side,
                                  preserveAspectRatio=True, mask="auto")
             hd = branding.get("header_image")
             if hd and os.path.exists(hd):
-                iw, ih = ImageReader(hd).getSize()
-                w = 96 * mm
-                h = w * ih / iw
-                canvas.drawImage(hd, (page_w - w) / 2,
-                                 page_h - h - 5 * mm, w, h,
-                                 preserveAspectRatio=True, mask="auto")
+                box_w, box_h = 180 * mm, 46 * mm
+                canvas.drawImage(hd, (page_w - box_w) / 2,
+                                 page_h - box_h - 4 * mm,
+                                 box_w, box_h,
+                                 preserveAspectRatio=True,
+                                 anchor="c", mask="auto")
         ts = datetime.now().strftime("%d %b %Y, %I:%M %p")
         if branding:
             canvas.setFont("Helvetica-Bold", 8.5)
@@ -88,7 +87,7 @@ def build_prediction_pdf(pred: dict, branding: dict | None = None) -> bytes:
     buf = io.BytesIO()
     doc = SimpleDocTemplate(buf, pagesize=landscape(A4), leftMargin=12 * mm,
                             rightMargin=12 * mm,
-                            topMargin=(34 * mm if branding else 12 * mm),
+                            topMargin=(56 * mm if branding else 12 * mm),
                             bottomMargin=16 * mm)
     styles = getSampleStyleSheet()
     cell = ParagraphStyle("cell", parent=styles["Normal"], fontSize=8,
@@ -193,7 +192,7 @@ def build_college_list_pdf(data: dict,
     buf = io.BytesIO()
     doc = SimpleDocTemplate(buf, pagesize=landscape(A4), leftMargin=12 * mm,
                             rightMargin=12 * mm,
-                            topMargin=(34 * mm if branding else 12 * mm),
+                            topMargin=(56 * mm if branding else 12 * mm),
                             bottomMargin=16 * mm)
     styles = getSampleStyleSheet()
     cell = ParagraphStyle("cell", parent=styles["Normal"], fontSize=8,
