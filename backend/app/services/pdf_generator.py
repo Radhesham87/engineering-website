@@ -40,7 +40,7 @@ PARTNER_BRANDING = {
     "aspirecareer1212@gmail.com": {
         "header_image": os.path.join(_ASSETS, "aspire_header.png"),
         "header_height_mm": 15,
-        "top_margin_mm": 30,
+        "top_margin_mm": 12,
         "watermark_image": os.path.join(_ASSETS, "aspire_watermark.png"),
         "footer_image": os.path.join(_ASSETS, "aspire_footer.png"),
         "footer_height_mm": 76,
@@ -182,7 +182,9 @@ def build_prediction_pdf(pred: dict, branding: dict | None = None) -> bytes:
                                 (branding.get("footer_height_mm", 22)
                                  + 4) * mm
                                 if branding and
-                                branding.get("footer_image")
+                                branding.get("footer_image") and
+                                branding.get("footer_pages", "all")
+                                == "all"
                                 else 16 * mm))
     styles = getSampleStyleSheet()
     cell = ParagraphStyle("cell", parent=styles["Normal"], fontSize=8,
@@ -233,7 +235,11 @@ def build_prediction_pdf(pred: dict, branding: dict | None = None) -> bytes:
         ("LEFTPADDING", (0, 0), (-1, -1), 6),
     ]))
 
-    story = [
+    story = []
+    if (branding and branding.get("header_image")
+            and branding.get("header_pages", "all") == "first"):
+        story.append(Spacer(1, 12 * mm))
+    story += [
         Paragraph("Engineering College Predictor", styles["Title"]),
         Spacer(1, 4 * mm), details, Spacer(1, 6 * mm)]
 
@@ -275,6 +281,10 @@ def build_prediction_pdf(pred: dict, branding: dict | None = None) -> bytes:
     ]
     table.setStyle(TableStyle(tstyle))
     story.append(table)
+    if (branding and branding.get("footer_image")
+            and branding.get("footer_pages", "all") == "last"):
+        story.append(Spacer(1, branding.get("footer_height_mm",
+                                            22) * mm))
     deco = _page_decorator(branding)
     if (branding and branding.get("footer_image")
             and branding.get("footer_pages", "all") == "last"):
@@ -299,7 +309,9 @@ def build_college_list_pdf(data: dict,
                                 (branding.get("footer_height_mm", 22)
                                  + 4) * mm
                                 if branding and
-                                branding.get("footer_image")
+                                branding.get("footer_image") and
+                                branding.get("footer_pages", "all")
+                                == "all"
                                 else 16 * mm))
     styles = getSampleStyleSheet()
     cell = ParagraphStyle("cell", parent=styles["Normal"], fontSize=8,
@@ -344,8 +356,12 @@ def build_college_list_pdf(data: dict,
         ("LEFTPADDING", (0, 0), (-1, -1), 6),
     ]))
 
-    story = [Paragraph("MH-CET College List", styles["Title"]),
-             Spacer(1, 4 * mm), details, Spacer(1, 6 * mm)]
+    story = []
+    if (branding and branding.get("header_image")
+            and branding.get("header_pages", "all") == "first"):
+        story.append(Spacer(1, 12 * mm))
+    story += [Paragraph("MH-CET College List", styles["Title"]),
+              Spacer(1, 4 * mm), details, Spacer(1, 6 * mm)]
 
     headers = ["Sr.No", "College Code", "College Name", "District", "Branch",
                "Category", "University", "Percentile", "Merit Rank"]
@@ -380,6 +396,10 @@ def build_college_list_pdf(data: dict,
         ("RIGHTPADDING", (0, 0), (-1, -1), 4),
     ]))
     story.append(table)
+    if (branding and branding.get("footer_image")
+            and branding.get("footer_pages", "all") == "last"):
+        story.append(Spacer(1, branding.get("footer_height_mm",
+                                            22) * mm))
     deco = _page_decorator(branding)
     if (branding and branding.get("footer_image")
             and branding.get("footer_pages", "all") == "last"):
