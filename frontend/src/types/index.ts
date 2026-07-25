@@ -8,6 +8,7 @@ export interface AuthUser {
 export interface CollegeRow {
   sr_no: number;
   college_code: string;
+  choice_code?: string;
   college_name: string;
   district: string;
   branch: string;

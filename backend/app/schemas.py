@@ -74,6 +74,7 @@ class CollegeListIn(BaseModel):
 class CollegeRow(BaseModel):
     sr_no: int
     college_code: str
+    choice_code: str = "-"
     college_name: str
     district: str
     branch: str

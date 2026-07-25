@@ -34,7 +34,7 @@ def load_dataset() -> pd.DataFrame:
             return _CACHE["df"]
 
         if path.endswith((".csv", ".gz")):
-            df = pd.read_csv(path)
+            df = pd.read_csv(path, dtype={"choice_code": str})
         else:
             df = pd.read_excel(path, sheet_name=0)
         df.columns = [str(c).strip().lower().replace(" ", "_")
@@ -44,7 +44,8 @@ def load_dataset() -> pd.DataFrame:
             raise ValueError(f"Dataset missing columns: {missing}")
 
         for c in ["exam", "college_code", "college_name", "district",
-                  "branch", "category", "status", "minority"]:
+                  "branch", "category", "status", "minority",
+                  "choice_code"]:
             if c in df.columns:
                 df[c] = (df[c].fillna("").astype("object")
                          .astype(str).str.strip())
@@ -307,6 +308,7 @@ def predict(exam: str, mode: str, value: float, category: str,
         rows.append({
             "sr_no": i,
             "college_code": code,
+            "choice_code": (str(r["choice_code"]).strip() or "-"),
             "college_name": str(r["college_name"]),
             "district": str(r["district"]) or "-",
             "branch": str(r["branch"]),
@@ -379,6 +381,7 @@ def college_list(exam: str, category: str = "", quotas=None,
         rows.append({
             "sr_no": i,
             "college_code": str(r["college_code"]),
+            "choice_code": (str(r["choice_code"]).strip() or "-"),
             "college_name": str(r["college_name"]),
             "district": str(r["district"]) or "-",
             "branch": str(r["branch"]),

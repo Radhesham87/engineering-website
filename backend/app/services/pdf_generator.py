@@ -245,7 +245,7 @@ def build_prediction_pdf(pred: dict, branding: dict | None = None) -> bytes:
 
     # ---- results table ----------------------------------------------------
     headers = ["Sr.No", "College Code", "College Name", "District", "Branch",
-               "University", "Percentile", "Merit Rank"]
+               "Choice Code", "University", "Percentile", "Merit Rank"]
     data = [[Paragraph(h, head) for h in headers]]
     for r in pred["results"]:
         name = r["college_name"]
@@ -257,14 +257,16 @@ def build_prediction_pdf(pred: dict, branding: dict | None = None) -> bytes:
             Paragraph(name, cell),
             Paragraph(r.get("district", "-"), cell),
             Paragraph(r["branch"], cell),
+            Paragraph(str(r.get("choice_code") or "-"), cell),
             Paragraph(_university(r), cell),
             Paragraph(f'{r["cutoff_percentile"]:.4f}'
                       if r["cutoff_percentile"] is not None else "-", cell),
             Paragraph(f'{r["cutoff_rank"]:,}'
                       if r["cutoff_rank"] is not None else "-", cell)])
 
-    table = Table(data, colWidths=[12 * mm, 20 * mm, 76 * mm, 24 * mm,
-                                   58 * mm, 32 * mm, 24 * mm, 21 * mm],
+    table = Table(data, colWidths=[12 * mm, 20 * mm, 64 * mm, 24 * mm,
+                                   50 * mm, 24 * mm, 32 * mm, 24 * mm,
+                                   21 * mm],
                   repeatRows=1)
     tstyle = [
         ("BACKGROUND", (0, 0), (-1, 0), BLUE),
@@ -272,8 +274,8 @@ def build_prediction_pdf(pred: dict, branding: dict | None = None) -> bytes:
         ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
         # standard alignment: numbers centred / right, text left
         ("ALIGN", (0, 0), (1, -1), "CENTER"),      # Sr.No, College Code
-        ("ALIGN", (5, 0), (5, -1), "CENTER"),      # University
-        ("ALIGN", (6, 0), (7, -1), "RIGHT"),       # Percentile, Merit Rank
+        ("ALIGN", (5, 0), (6, -1), "CENTER"),   # Choice Code, University
+        ("ALIGN", (7, 0), (8, -1), "RIGHT"),    # Percentile, Merit Rank
         ("TOPPADDING", (0, 0), (-1, -1), 4),
         ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
         ("LEFTPADDING", (0, 0), (-1, -1), 4),
@@ -364,7 +366,8 @@ def build_college_list_pdf(data: dict,
               Spacer(1, 4 * mm), details, Spacer(1, 6 * mm)]
 
     headers = ["Sr.No", "College Code", "College Name", "District", "Branch",
-               "Category", "University", "Percentile", "Merit Rank"]
+               "Choice Code", "Category", "University", "Percentile",
+               "Merit Rank"]
     data_rows = [[Paragraph(h, head) for h in headers]]
     for r in data.get("results", []):
         data_rows.append([
@@ -373,6 +376,7 @@ def build_college_list_pdf(data: dict,
             Paragraph(r["college_name"], cell),
             Paragraph(r.get("district", "-"), cell),
             Paragraph(r["branch"], cell),
+            Paragraph(str(r.get("choice_code") or "-"), cell),
             Paragraph(r.get("category", "-"), cell),
             Paragraph(_university(r), cell),
             Paragraph(f'{r["cutoff_percentile"]:.4f}'
@@ -380,16 +384,16 @@ def build_college_list_pdf(data: dict,
             Paragraph(f'{r["cutoff_rank"]:,}'
                       if r["cutoff_rank"] is not None else "-", cell)])
 
-    table = Table(data_rows, colWidths=[12 * mm, 18 * mm, 64 * mm, 24 * mm,
-                                        52 * mm, 20 * mm, 30 * mm, 24 * mm,
-                                        21 * mm], repeatRows=1)
+    table = Table(data_rows, colWidths=[12 * mm, 18 * mm, 56 * mm, 24 * mm,
+                                        44 * mm, 22 * mm, 20 * mm, 30 * mm,
+                                        24 * mm, 21 * mm], repeatRows=1)
     table.setStyle(TableStyle([
         ("BACKGROUND", (0, 0), (-1, 0), BLUE),
         ("GRID", (0, 0), (-1, -1), 0.4, colors.HexColor("#9aa7b4")),
         ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
         ("ALIGN", (0, 0), (1, -1), "CENTER"),
-        ("ALIGN", (5, 0), (6, -1), "CENTER"),
-        ("ALIGN", (7, 0), (8, -1), "RIGHT"),
+        ("ALIGN", (5, 0), (7, -1), "CENTER"),
+        ("ALIGN", (8, 0), (9, -1), "RIGHT"),
         ("TOPPADDING", (0, 0), (-1, -1), 4),
         ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
         ("LEFTPADDING", (0, 0), (-1, -1), 4),

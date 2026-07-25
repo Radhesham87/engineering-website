@@ -30,6 +30,7 @@ export function ResultsTable({
             <th className="px-3 py-2">College Name</th>
             <th className="px-3 py-2">District</th>
             <th className="px-3 py-2">Branch</th>
+            <th className="px-3 py-2">Choice Code</th>
             {showCat && <th className="px-3 py-2">Category</th>}
             {showStatus && <th className="px-3 py-2">Status</th>}
             {showHome && <th className="px-3 py-2">University</th>}
@@ -52,6 +53,7 @@ export function ResultsTable({
               </td>
               <td className="px-3 py-2">{r.district}</td>
               <td className="px-3 py-2">{r.branch}</td>
+              <td className="px-3 py-2 whitespace-nowrap">{r.choice_code || "-"}</td>
               {showCat && <td className="px-3 py-2">{r.category}</td>}
               {showStatus && <td className="px-3 py-2">{r.status}</td>}
               {showHome && (
