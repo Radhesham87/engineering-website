@@ -44,7 +44,7 @@ def load_dataset() -> pd.DataFrame:
             raise ValueError(f"Dataset missing columns: {missing}")
 
         for c in ["exam", "college_code", "college_name", "district",
-                  "branch", "category", "status"]:
+                  "branch", "category", "status", "minority"]:
             if c in df.columns:
                 df[c] = (df[c].fillna("").astype("object")
                          .astype(str).str.strip())
@@ -59,6 +59,7 @@ def load_dataset() -> pd.DataFrame:
         df["category_u"] = df["category"].str.upper()
         df["district_u"] = df["district"].str.upper()
         df["status_u"] = df["status"].str.upper()
+        df["minority_u"] = df["minority"].str.upper()
 
         _CACHE.update({"path": path, "mtime": mtime, "df": df})
         return df
@@ -210,7 +211,17 @@ def predict(exam: str, mode: str, value: float, category: str,
     show_category = exam.upper() == "MH-CET"
     if show_category and category:
         prefs = tuple(_category_prefixes(category, gender))
-        d = d[d["category_u"].str.startswith(prefs)]
+        cat_mask = d["category_u"].str.startswith(prefs)
+        # Minority colleges have no reserved-category seats, so students
+        # of OPEN/OBC/SEBC/NT/SC/ST/VJ compete there via the college's
+        # OPEN cutoff (G… for gender-neutral, L… for ladies).
+        if category.upper() in _GL_CATEGORIES:
+            open_prefs = tuple(_category_prefixes("OPEN", gender))
+            is_mino = (d["minority_u"] != "") & \
+                      (d["minority_u"] != "NON-MINORITY")
+            cat_mask = cat_mask | (
+                is_mino & d["category_u"].str.startswith(open_prefs))
+        d = d[cat_mask]
 
     brs = [b for b in (branches or []) if b]
     if brs:
@@ -323,7 +334,17 @@ def college_list(exam: str, category: str = "", quotas=None,
     show_category = exam.upper() == "MH-CET"
     if show_category and category:
         prefs = tuple(_category_prefixes(category, gender))
-        d = d[d["category_u"].str.startswith(prefs)]
+        cat_mask = d["category_u"].str.startswith(prefs)
+        # Minority colleges have no reserved-category seats, so students
+        # of OPEN/OBC/SEBC/NT/SC/ST/VJ compete there via the college's
+        # OPEN cutoff (G… for gender-neutral, L… for ladies).
+        if category.upper() in _GL_CATEGORIES:
+            open_prefs = tuple(_category_prefixes("OPEN", gender))
+            is_mino = (d["minority_u"] != "") & \
+                      (d["minority_u"] != "NON-MINORITY")
+            cat_mask = cat_mask | (
+                is_mino & d["category_u"].str.startswith(open_prefs))
+        d = d[cat_mask]
     brs = [b for b in (branches or []) if b]
     if brs:
         d = d[d["branch_u"].isin([b.upper() for b in brs])]
