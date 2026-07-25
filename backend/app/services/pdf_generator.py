@@ -62,7 +62,7 @@ def _page_decorator(branding: dict | None = None):
                     tw, th = ImageReader(tg).getSize()
                     t_w = 108 * mm              # tagline, RIGHT side
                     t_h = t_w * th / tw
-                    canvas.drawImage(tg, page_w - 12 * mm - t_w,
+                    canvas.drawImage(tg, 20 * mm + w + 14 * mm,
                                      logo_mid - t_h / 2, t_w, t_h,
                                      preserveAspectRatio=True,
                                      mask="auto")
