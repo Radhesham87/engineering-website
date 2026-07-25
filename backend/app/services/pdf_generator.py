@@ -53,7 +53,7 @@ def _page_decorator(branding: dict | None = None):
                 iw, ih = ImageReader(hd).getSize()
                 h = 26 * mm                     # logo, LEFT side
                 w = h * iw / ih
-                canvas.drawImage(hd, 12 * mm, page_h - h - 6 * mm,
+                canvas.drawImage(hd, 20 * mm, page_h - h - 6 * mm,
                                  w, h, preserveAspectRatio=True,
                                  mask="auto")
                 logo_mid = page_h - 6 * mm - h / 2
