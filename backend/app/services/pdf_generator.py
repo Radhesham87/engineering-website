@@ -34,6 +34,13 @@ PARTNER_BRANDING = {
             (" / 8379069919", 9.5),
         ],
     },
+    "aspirecareer1212@gmail.com": {
+        "header_image": os.path.join(_ASSETS, "aspire_header.png"),
+        "header_height_mm": 36,
+        "watermark_image": os.path.join(_ASSETS, "aspire_watermark.png"),
+        "footer_image": os.path.join(_ASSETS, "aspire_footer.png"),
+        "footer": "9607801212 | 9370736973 | 9607901212",
+    },
 }
 
 
@@ -56,7 +63,7 @@ def _page_decorator(branding: dict | None = None):
             hd = branding.get("header_image")
             if hd and os.path.exists(hd):
                 iw, ih = ImageReader(hd).getSize()
-                h = 32 * mm                   # logo, CENTRED, bigger
+                h = branding.get("header_height_mm", 32) * mm
                 w = h * iw / ih
                 canvas.drawImage(hd, (page_w - w) / 2,
                                  page_h - h - 5 * mm,
@@ -74,16 +81,25 @@ def _page_decorator(branding: dict | None = None):
                                      mask="auto")
         ts = datetime.now().strftime("%d %b %Y, %I:%M %p")
         if branding:
-            segs = (branding.get("footer_segments")
-                    or [(branding["footer"], 11.5)])
-            total = sum(canvas.stringWidth(s, "Helvetica-Bold", sz)
-                        for s, sz in segs)
-            x = (page_w - total) / 2
-            canvas.setFillColor(colors.HexColor("#333333"))
-            for s, sz in segs:
-                canvas.setFont("Helvetica-Bold", sz)
-                canvas.drawString(x, 8 * mm, s)
-                x += canvas.stringWidth(s, "Helvetica-Bold", sz)
+            fi = branding.get("footer_image")
+            if fi and os.path.exists(fi):
+                fw_, fh_ = ImageReader(fi).getSize()
+                f_h = 22 * mm
+                f_w = f_h * fw_ / fh_
+                canvas.drawImage(fi, (page_w - f_w) / 2, 4 * mm,
+                                 f_w, f_h, preserveAspectRatio=True,
+                                 mask="auto")
+            else:
+                segs = (branding.get("footer_segments")
+                        or [(branding["footer"], 11.5)])
+                total = sum(canvas.stringWidth(s, "Helvetica-Bold", sz)
+                            for s, sz in segs)
+                x = (page_w - total) / 2
+                canvas.setFillColor(colors.HexColor("#333333"))
+                for s, sz in segs:
+                    canvas.setFont("Helvetica-Bold", sz)
+                    canvas.drawString(x, 8 * mm, s)
+                    x += canvas.stringWidth(s, "Helvetica-Bold", sz)
             canvas.setFont("Helvetica", 7)
             canvas.setFillColor(colors.grey)
             canvas.drawRightString(page_w - 12 * mm, 8 * mm,
@@ -114,7 +130,9 @@ def build_prediction_pdf(pred: dict, branding: dict | None = None) -> bytes:
     doc = SimpleDocTemplate(buf, pagesize=landscape(A4), leftMargin=12 * mm,
                             rightMargin=12 * mm,
                             topMargin=(54 * mm if branding else 12 * mm),
-                            bottomMargin=16 * mm)
+                            bottomMargin=(30 * mm if branding and
+                                          branding.get("footer_image")
+                                          else 16 * mm))
     styles = getSampleStyleSheet()
     cell = ParagraphStyle("cell", parent=styles["Normal"], fontSize=8,
                           leading=10)
@@ -219,7 +237,9 @@ def build_college_list_pdf(data: dict,
     doc = SimpleDocTemplate(buf, pagesize=landscape(A4), leftMargin=12 * mm,
                             rightMargin=12 * mm,
                             topMargin=(54 * mm if branding else 12 * mm),
-                            bottomMargin=16 * mm)
+                            bottomMargin=(30 * mm if branding and
+                                          branding.get("footer_image")
+                                          else 16 * mm))
     styles = getSampleStyleSheet()
     cell = ParagraphStyle("cell", parent=styles["Normal"], fontSize=8,
                           leading=10)

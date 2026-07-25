@@ -85,6 +85,16 @@ def on_startup():
                 role=Role.user, status=Status.approved, is_active=True))
             db.commit()
             log.info("Seeded branded partner account %s", partner_email)
+        aspire_email = "aspirecareer1212@gmail.com"
+        if not db.query(User).filter(User.email == aspire_email).first():
+            db.add(User(
+                name="ASPIRE Career Counselling Center",
+                email=aspire_email,
+                password_hash=hash_password("Aspire@1212"),
+                mobile="9607801212", city="Latur", state="Maharashtra",
+                role=Role.user, status=Status.approved, is_active=True))
+            db.commit()
+            log.info("Seeded branded partner account %s", aspire_email)
     finally:
         db.close()
 
