@@ -36,9 +36,11 @@ PARTNER_BRANDING = {
     },
     "aspirecareer1212@gmail.com": {
         "header_image": os.path.join(_ASSETS, "aspire_header.png"),
-        "header_height_mm": 36,
+        "header_height_mm": 15,
+        "top_margin_mm": 30,
         "watermark_image": os.path.join(_ASSETS, "aspire_watermark.png"),
         "footer_image": os.path.join(_ASSETS, "aspire_footer.png"),
+        "footer_height_mm": 26,
         "footer": "9607801212 | 9370736973 | 9607901212",
     },
 }
@@ -84,7 +86,7 @@ def _page_decorator(branding: dict | None = None):
             fi = branding.get("footer_image")
             if fi and os.path.exists(fi):
                 fw_, fh_ = ImageReader(fi).getSize()
-                f_h = 22 * mm
+                f_h = branding.get("footer_height_mm", 22) * mm
                 f_w = f_h * fw_ / fh_
                 canvas.drawImage(fi, (page_w - f_w) / 2, 4 * mm,
                                  f_w, f_h, preserveAspectRatio=True,
@@ -129,10 +131,14 @@ def build_prediction_pdf(pred: dict, branding: dict | None = None) -> bytes:
     buf = io.BytesIO()
     doc = SimpleDocTemplate(buf, pagesize=landscape(A4), leftMargin=12 * mm,
                             rightMargin=12 * mm,
-                            topMargin=(54 * mm if branding else 12 * mm),
-                            bottomMargin=(30 * mm if branding and
-                                          branding.get("footer_image")
-                                          else 16 * mm))
+                            topMargin=(branding.get("top_margin_mm", 54) * mm
+                                       if branding else 12 * mm),
+                            bottomMargin=(
+                                (branding.get("footer_height_mm", 22)
+                                 + 12) * mm
+                                if branding and
+                                branding.get("footer_image")
+                                else 16 * mm))
     styles = getSampleStyleSheet()
     cell = ParagraphStyle("cell", parent=styles["Normal"], fontSize=8,
                           leading=10)
@@ -236,10 +242,14 @@ def build_college_list_pdf(data: dict,
     buf = io.BytesIO()
     doc = SimpleDocTemplate(buf, pagesize=landscape(A4), leftMargin=12 * mm,
                             rightMargin=12 * mm,
-                            topMargin=(54 * mm if branding else 12 * mm),
-                            bottomMargin=(30 * mm if branding and
-                                          branding.get("footer_image")
-                                          else 16 * mm))
+                            topMargin=(branding.get("top_margin_mm", 54) * mm
+                                       if branding else 12 * mm),
+                            bottomMargin=(
+                                (branding.get("footer_height_mm", 22)
+                                 + 12) * mm
+                                if branding and
+                                branding.get("footer_image")
+                                else 16 * mm))
     styles = getSampleStyleSheet()
     cell = ParagraphStyle("cell", parent=styles["Normal"], fontSize=8,
                           leading=10)
