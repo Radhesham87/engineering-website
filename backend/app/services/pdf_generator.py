@@ -3,6 +3,8 @@ import io
 import os
 from datetime import datetime
 
+from reportlab.lib.utils import ImageReader
+
 
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4, landscape
@@ -22,6 +24,7 @@ _ASSETS = os.path.join(os.path.dirname(__file__), "..", "assets")
 PARTNER_BRANDING = {
     "gncnanded@gmail.com": {
         "header_image": os.path.join(_ASSETS, "grovy_header.png"),
+        "tagline_image": os.path.join(_ASSETS, "grovy_tagline.png"),
         "watermark_image": os.path.join(_ASSETS, "grovy_watermark.png"),
         "footer": ("Patil Complex Bhagya Nagar T Point Nanded "
                    "9921770747/8379069919"),
@@ -47,15 +50,25 @@ def _page_decorator(branding: dict | None = None):
                                  preserveAspectRatio=True, mask="auto")
             hd = branding.get("header_image")
             if hd and os.path.exists(hd):
-                box_w, box_h = 180 * mm, 46 * mm
-                canvas.drawImage(hd, (page_w - box_w) / 2,
-                                 page_h - box_h - 4 * mm,
-                                 box_w, box_h,
-                                 preserveAspectRatio=True,
-                                 anchor="c", mask="auto")
+                iw, ih = ImageReader(hd).getSize()
+                h = 26 * mm                     # logo, LEFT side
+                w = h * iw / ih
+                canvas.drawImage(hd, 12 * mm, page_h - h - 6 * mm,
+                                 w, h, preserveAspectRatio=True,
+                                 mask="auto")
+                logo_mid = page_h - 6 * mm - h / 2
+                tg = branding.get("tagline_image")
+                if tg and os.path.exists(tg):
+                    tw, th = ImageReader(tg).getSize()
+                    t_w = 108 * mm              # tagline, RIGHT side
+                    t_h = t_w * th / tw
+                    canvas.drawImage(tg, page_w - 12 * mm - t_w,
+                                     logo_mid - t_h / 2, t_w, t_h,
+                                     preserveAspectRatio=True,
+                                     mask="auto")
         ts = datetime.now().strftime("%d %b %Y, %I:%M %p")
         if branding:
-            canvas.setFont("Helvetica-Bold", 8.5)
+            canvas.setFont("Helvetica-Bold", 11.5)
             canvas.setFillColor(colors.HexColor("#333333"))
             canvas.drawCentredString(page_w / 2, 8 * mm, branding["footer"])
             canvas.setFont("Helvetica", 7)
@@ -87,7 +100,7 @@ def build_prediction_pdf(pred: dict, branding: dict | None = None) -> bytes:
     buf = io.BytesIO()
     doc = SimpleDocTemplate(buf, pagesize=landscape(A4), leftMargin=12 * mm,
                             rightMargin=12 * mm,
-                            topMargin=(56 * mm if branding else 12 * mm),
+                            topMargin=(38 * mm if branding else 12 * mm),
                             bottomMargin=16 * mm)
     styles = getSampleStyleSheet()
     cell = ParagraphStyle("cell", parent=styles["Normal"], fontSize=8,
@@ -192,7 +205,7 @@ def build_college_list_pdf(data: dict,
     buf = io.BytesIO()
     doc = SimpleDocTemplate(buf, pagesize=landscape(A4), leftMargin=12 * mm,
                             rightMargin=12 * mm,
-                            topMargin=(56 * mm if branding else 12 * mm),
+                            topMargin=(38 * mm if branding else 12 * mm),
                             bottomMargin=16 * mm)
     styles = getSampleStyleSheet()
     cell = ParagraphStyle("cell", parent=styles["Normal"], fontSize=8,
