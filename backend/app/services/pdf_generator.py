@@ -3,7 +3,10 @@ import io
 import os
 from datetime import datetime
 
+from functools import partial
+
 from reportlab.lib.utils import ImageReader
+from reportlab.pdfgen.canvas import Canvas as _RLCanvas
 
 
 from reportlab.lib import colors
@@ -41,6 +44,8 @@ PARTNER_BRANDING = {
         "watermark_image": os.path.join(_ASSETS, "aspire_watermark.png"),
         "footer_image": os.path.join(_ASSETS, "aspire_footer.png"),
         "footer_height_mm": 26,
+        "header_pages": "first",
+        "footer_pages": "last",
         "footer": "9607801212 | 9370736973 | 9607901212",
     },
 }
@@ -48,6 +53,40 @@ PARTNER_BRANDING = {
 
 def get_branding(email: str | None) -> dict | None:
     return PARTNER_BRANDING.get((email or "").strip().lower())
+
+
+def _draw_footer_image(canv, branding):
+    fi = branding.get("footer_image")
+    if not (fi and os.path.exists(fi)):
+        return
+    page_w, _ = landscape(A4)
+    fw_, fh_ = ImageReader(fi).getSize()
+    f_h = branding.get("footer_height_mm", 22) * mm
+    f_w = f_h * fw_ / fh_
+    canv.drawImage(fi, (page_w - f_w) / 2, 4 * mm, f_w, f_h,
+                   preserveAspectRatio=True, mask="auto")
+
+
+class _LastPageFooterCanvas(_RLCanvas):
+    """Defers page output so the footer image lands on the LAST page only."""
+
+    def __init__(self, *args, branding=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._branding = branding or {}
+        self._saved_states = []
+
+    def showPage(self):
+        self._saved_states.append(dict(self.__dict__))
+        self._startPage()
+
+    def save(self):
+        total = len(self._saved_states)
+        for i, state in enumerate(self._saved_states):
+            self.__dict__.update(state)
+            if i == total - 1:
+                _draw_footer_image(self, self._branding)
+            _RLCanvas.showPage(self)
+        _RLCanvas.save(self)
 
 
 def _page_decorator(branding: dict | None = None):
@@ -63,7 +102,9 @@ def _page_decorator(branding: dict | None = None):
                                  (page_h - side) / 2, side, side,
                                  preserveAspectRatio=True, mask="auto")
             hd = branding.get("header_image")
-            if hd and os.path.exists(hd):
+            if (hd and os.path.exists(hd)
+                    and (branding.get("header_pages", "all")
+                         == "all" or doc.page == 1)):
                 iw, ih = ImageReader(hd).getSize()
                 h = branding.get("header_height_mm", 32) * mm
                 w = h * iw / ih
@@ -85,12 +126,8 @@ def _page_decorator(branding: dict | None = None):
         if branding:
             fi = branding.get("footer_image")
             if fi and os.path.exists(fi):
-                fw_, fh_ = ImageReader(fi).getSize()
-                f_h = branding.get("footer_height_mm", 22) * mm
-                f_w = f_h * fw_ / fh_
-                canvas.drawImage(fi, (page_w - f_w) / 2, 4 * mm,
-                                 f_w, f_h, preserveAspectRatio=True,
-                                 mask="auto")
+                if branding.get("footer_pages", "all") == "all":
+                    _draw_footer_image(canvas, branding)
             else:
                 segs = (branding.get("footer_segments")
                         or [(branding["footer"], 11.5)])
@@ -231,7 +268,13 @@ def build_prediction_pdf(pred: dict, branding: dict | None = None) -> bytes:
     table.setStyle(TableStyle(tstyle))
     story.append(table)
     deco = _page_decorator(branding)
-    doc.build(story, onFirstPage=deco, onLaterPages=deco)
+    if (branding and branding.get("footer_image")
+            and branding.get("footer_pages", "all") == "last"):
+        doc.build(story, onFirstPage=deco, onLaterPages=deco,
+                  canvasmaker=partial(_LastPageFooterCanvas,
+                                      branding=branding))
+    else:
+        doc.build(story, onFirstPage=deco, onLaterPages=deco)
     return buf.getvalue()
 
 
@@ -330,5 +373,11 @@ def build_college_list_pdf(data: dict,
     ]))
     story.append(table)
     deco = _page_decorator(branding)
-    doc.build(story, onFirstPage=deco, onLaterPages=deco)
+    if (branding and branding.get("footer_image")
+            and branding.get("footer_pages", "all") == "last"):
+        doc.build(story, onFirstPage=deco, onLaterPages=deco,
+                  canvasmaker=partial(_LastPageFooterCanvas,
+                                      branding=branding))
+    else:
+        doc.build(story, onFirstPage=deco, onLaterPages=deco)
     return buf.getvalue()
