@@ -74,6 +74,17 @@ def on_startup():
                 role=Role.admin, status=Status.approved, is_active=True))
             db.commit()
             log.info("Seeded default admin %s", settings.ADMIN_EMAIL)
+        # branded partner account (PDFs carry GROVY branding for this email)
+        partner_email = "gncnanded@gmail.com"
+        if not db.query(User).filter(User.email == partner_email).first():
+            db.add(User(
+                name="GROVY Education Consultant",
+                email=partner_email,
+                password_hash=hash_password("Pass@1234"),
+                mobile="9921770747", city="Nanded", state="Maharashtra",
+                role=Role.user, status=Status.approved, is_active=True))
+            db.commit()
+            log.info("Seeded branded partner account %s", partner_email)
     finally:
         db.close()
 

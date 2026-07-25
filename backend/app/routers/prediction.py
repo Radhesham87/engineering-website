@@ -7,7 +7,8 @@ from app.database import get_db
 from app.deps import get_approved_user
 from app.models import Prediction, Setting, User
 from app.schemas import PredictIn, PredictOut
-from app.services.pdf_generator import build_prediction_pdf
+from app.services.pdf_generator import (build_prediction_pdf,
+                                        get_branding)
 from app.services.prediction_engine import predict as run_predict
 from app.services.prediction_engine import university_of
 
@@ -88,7 +89,8 @@ def download_pdf(prediction_id: int, db: Session = Depends(get_db),
         "show_category": pred.exam.upper() == "MH-CET",
         "home_university": home_univ,
         "count": pred.result_count, "results": results}
-    pdf = build_prediction_pdf(payload)
+    pdf = build_prediction_pdf(payload,
+                               branding=get_branding(user.email))
 
     dl = db.query(Setting).filter(Setting.key == "total_downloads").first()
     if not dl:

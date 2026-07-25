@@ -57,6 +57,17 @@ export function CollegeList() {
     }
   }
 
+  async function downloadPdf() {
+    try {
+      await api.collegesPdf({
+        exam, category, gender, home_district: homeDistrict,
+        branches, districts,
+      });
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
+  }
+
   if (!ready) return null;
 
   return (
@@ -134,9 +145,12 @@ export function CollegeList() {
 
         {result && result.count > 0 && (
           <>
-            <p className="text-sm text-slate-400">
-              {result.count} colleges · sorted by closing cutoff (highest first)
-            </p>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <p className="text-sm text-slate-400">
+                {result.count} colleges · sorted by closing cutoff (highest first)
+              </p>
+              <button className="btn" onClick={downloadPdf}>📄 Download PDF</button>
+            </div>
             <ResultsTable data={result} />
           </>
         )}

@@ -11,6 +11,8 @@ from app.config import settings
 from app.schemas import CollegeListIn
 from app.deps import get_admin, get_approved_user
 from app.models import User
+from app.services.pdf_generator import (build_college_list_pdf,
+                                        get_branding)
 from app.services.prediction_engine import (college_list, dataset_stats,
                                             load_dataset, meta)
 
@@ -73,6 +75,29 @@ def colleges(body: CollegeListIn, _: User = Depends(get_approved_user)):
         raise HTTPException(404, "No dataset uploaded yet.")
     except ValueError as e:
         raise HTTPException(400, str(e))
+
+
+@router.post("/colleges/pdf")
+def colleges_pdf(body: CollegeListIn,
+                 user: User = Depends(get_approved_user)):
+    """Download the filtered college list as a PDF."""
+    try:
+        res = college_list(body.exam, body.category, body.quotas,
+                           body.branches, body.districts,
+                           gender=body.gender,
+                           home_district=body.home_district)
+    except FileNotFoundError:
+        raise HTTPException(404, "No dataset uploaded yet.")
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    pdf = build_college_list_pdf({**res, "category": body.category,
+                                  "gender": body.gender,
+                                  "home_district": body.home_district},
+                                 branding=get_branding(user.email))
+    return StreamingResponse(
+        iter([pdf]), media_type="application/pdf",
+        headers={"Content-Disposition":
+                 'attachment; filename="MHCET_College_List.pdf"'})
 
 
 @router.post("/upload")

@@ -52,6 +52,25 @@ async function download(path: string, filename: string) {
   URL.revokeObjectURL(url);
 }
 
+async function downloadPost(path: string, body: unknown, filename: string) {
+  const res = await fetch(`${BASE}${path}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token()}`,
+    },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error(`Download failed (${res.status})`);
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const el = document.createElement("a");
+  el.href = url;
+  el.download = filename;
+  el.click();
+  URL.revokeObjectURL(url);
+}
+
 export const api = {
   base: BASE,
   request,
@@ -94,4 +113,6 @@ export const api = {
   summary: () => request("/api/dataset/summary", {}, false),
   colleges: (body: unknown) =>
     request("/api/dataset/colleges", { method: "POST", body: JSON.stringify(body) }),
+  collegesPdf: (body: unknown) =>
+    downloadPost("/api/dataset/colleges/pdf", body, "MHCET_College_List.pdf"),
 };
