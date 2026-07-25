@@ -43,7 +43,8 @@ PARTNER_BRANDING = {
         "top_margin_mm": 30,
         "watermark_image": os.path.join(_ASSETS, "aspire_watermark.png"),
         "footer_image": os.path.join(_ASSETS, "aspire_footer.png"),
-        "footer_height_mm": 26,
+        "footer_height_mm": 76,
+        "footer_full_width": True,
         "header_pages": "first",
         "footer_pages": "last",
         "footer": "9607801212 | 9370736973 | 9607901212",
@@ -61,10 +62,17 @@ def _draw_footer_image(canv, branding):
         return
     page_w, _ = landscape(A4)
     fw_, fh_ = ImageReader(fi).getSize()
-    f_h = branding.get("footer_height_mm", 22) * mm
-    f_w = f_h * fw_ / fh_
-    canv.drawImage(fi, (page_w - f_w) / 2, 4 * mm, f_w, f_h,
-                   preserveAspectRatio=True, mask="auto")
+    if branding.get("footer_full_width"):
+        # edge-to-edge band, flush with the bottom of the page
+        f_w = page_w
+        f_h = f_w * fh_ / fw_
+        canv.drawImage(fi, 0, 0, f_w, f_h,
+                       preserveAspectRatio=True, mask="auto")
+    else:
+        f_h = branding.get("footer_height_mm", 22) * mm
+        f_w = f_h * fw_ / fh_
+        canv.drawImage(fi, (page_w - f_w) / 2, 4 * mm, f_w, f_h,
+                       preserveAspectRatio=True, mask="auto")
 
 
 class _LastPageFooterCanvas(_RLCanvas):
@@ -172,7 +180,7 @@ def build_prediction_pdf(pred: dict, branding: dict | None = None) -> bytes:
                                        if branding else 12 * mm),
                             bottomMargin=(
                                 (branding.get("footer_height_mm", 22)
-                                 + 12) * mm
+                                 + 4) * mm
                                 if branding and
                                 branding.get("footer_image")
                                 else 16 * mm))
@@ -289,7 +297,7 @@ def build_college_list_pdf(data: dict,
                                        if branding else 12 * mm),
                             bottomMargin=(
                                 (branding.get("footer_height_mm", 22)
-                                 + 12) * mm
+                                 + 4) * mm
                                 if branding and
                                 branding.get("footer_image")
                                 else 16 * mm))
