@@ -28,6 +28,11 @@ PARTNER_BRANDING = {
         "watermark_image": os.path.join(_ASSETS, "grovy_watermark.png"),
         "footer": ("Patil Complex Bhagya Nagar T Point Nanded "
                    "9921770747/8379069919"),
+        "footer_segments": [
+            ("Patil Complex Bhagya Nagar T Point Nanded  ", 11.5),
+            ("9921770747", 15),
+            (" / 8379069919", 9.5),
+        ],
     },
 }
 
@@ -51,26 +56,34 @@ def _page_decorator(branding: dict | None = None):
             hd = branding.get("header_image")
             if hd and os.path.exists(hd):
                 iw, ih = ImageReader(hd).getSize()
-                h = 26 * mm                     # logo, LEFT side
+                h = 32 * mm                   # logo, CENTRED, bigger
                 w = h * iw / ih
-                canvas.drawImage(hd, 20 * mm, page_h - h - 6 * mm,
+                canvas.drawImage(hd, (page_w - w) / 2,
+                                 page_h - h - 5 * mm,
                                  w, h, preserveAspectRatio=True,
                                  mask="auto")
-                logo_mid = page_h - 6 * mm - h / 2
                 tg = branding.get("tagline_image")
                 if tg and os.path.exists(tg):
                     tw, th = ImageReader(tg).getSize()
-                    t_w = 108 * mm              # tagline, RIGHT side
+                    t_w = 96 * mm             # tagline, centred below
                     t_h = t_w * th / tw
-                    canvas.drawImage(tg, 20 * mm + w + 14 * mm,
-                                     logo_mid - t_h / 2, t_w, t_h,
+                    canvas.drawImage(tg, (page_w - t_w) / 2,
+                                     page_h - h - 5 * mm - t_h - 2 * mm,
+                                     t_w, t_h,
                                      preserveAspectRatio=True,
                                      mask="auto")
         ts = datetime.now().strftime("%d %b %Y, %I:%M %p")
         if branding:
-            canvas.setFont("Helvetica-Bold", 11.5)
+            segs = (branding.get("footer_segments")
+                    or [(branding["footer"], 11.5)])
+            total = sum(canvas.stringWidth(s, "Helvetica-Bold", sz)
+                        for s, sz in segs)
+            x = (page_w - total) / 2
             canvas.setFillColor(colors.HexColor("#333333"))
-            canvas.drawCentredString(page_w / 2, 8 * mm, branding["footer"])
+            for s, sz in segs:
+                canvas.setFont("Helvetica-Bold", sz)
+                canvas.drawString(x, 8 * mm, s)
+                x += canvas.stringWidth(s, "Helvetica-Bold", sz)
             canvas.setFont("Helvetica", 7)
             canvas.setFillColor(colors.grey)
             canvas.drawRightString(page_w - 12 * mm, 8 * mm,
@@ -100,7 +113,7 @@ def build_prediction_pdf(pred: dict, branding: dict | None = None) -> bytes:
     buf = io.BytesIO()
     doc = SimpleDocTemplate(buf, pagesize=landscape(A4), leftMargin=12 * mm,
                             rightMargin=12 * mm,
-                            topMargin=(38 * mm if branding else 12 * mm),
+                            topMargin=(54 * mm if branding else 12 * mm),
                             bottomMargin=16 * mm)
     styles = getSampleStyleSheet()
     cell = ParagraphStyle("cell", parent=styles["Normal"], fontSize=8,
@@ -205,7 +218,7 @@ def build_college_list_pdf(data: dict,
     buf = io.BytesIO()
     doc = SimpleDocTemplate(buf, pagesize=landscape(A4), leftMargin=12 * mm,
                             rightMargin=12 * mm,
-                            topMargin=(38 * mm if branding else 12 * mm),
+                            topMargin=(54 * mm if branding else 12 * mm),
                             bottomMargin=16 * mm)
     styles = getSampleStyleSheet()
     cell = ParagraphStyle("cell", parent=styles["Normal"], fontSize=8,
