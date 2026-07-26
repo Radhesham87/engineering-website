@@ -13,11 +13,12 @@ import type { Meta, PredictResult } from "@/types";
  * Full prediction experience for a single exam.
  * Rendered by /predict (MH-CET) and /jee (JEE-Main).
  */
-export function PredictorForm({ exam }: { exam: "MH-CET" | "JEE-Main" }) {
+export function PredictorForm({ exam }: { exam: "MH-CET" | "JEE-Main" | "DSY" }) {
   const { user, ready } = useAuth();
   const router = useRouter();
   const isMhtcet = exam === "MH-CET";
-  const accent = isMhtcet ? "blue" : "purple";
+  const isDsy = exam === "DSY";
+  const accent = isMhtcet ? "blue" : isDsy ? "emerald" : "purple";
   const FIELD =
     "w-full rounded-lg border border-slate-700 bg-slate-800/70 px-3 py-2.5 text-sm text-white placeholder-slate-500 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/40";
 
@@ -64,8 +65,8 @@ export function PredictorForm({ exam }: { exam: "MH-CET" | "JEE-Main" }) {
     try {
       const res = (await api.predict({
         student_name: studentName, exam, mode, value: num,
-        category: isMhtcet ? category : "", branches, districts,
-        gender: isMhtcet ? gender : "gender-neutral",
+        category: isMhtcet || isDsy ? category : "", branches, districts,
+        gender: isMhtcet || isDsy ? gender : "gender-neutral",
         home_district: isMhtcet ? homeDistrict : "",
       })) as PredictResult;
       setResult(res);
@@ -134,7 +135,7 @@ export function PredictorForm({ exam }: { exam: "MH-CET" | "JEE-Main" }) {
           </div>
         </div>
 
-        {isMhtcet && (
+        {(isMhtcet || isDsy) && (
           <div>
             <label className="label">Gender / Seat Type</label>
             <select className={`${FIELD} [&>option]:bg-slate-800 [&>option]:text-white`}
@@ -157,7 +158,7 @@ export function PredictorForm({ exam }: { exam: "MH-CET" | "JEE-Main" }) {
           </div>
         )}
 
-        {isMhtcet && (
+        {(isMhtcet || isDsy) && (
           <div>
             <label className="label">Category</label>
             <select className={`${FIELD} [&>option]:bg-slate-800 [&>option]:text-white`} value={category}
@@ -169,20 +170,27 @@ export function PredictorForm({ exam }: { exam: "MH-CET" | "JEE-Main" }) {
         )}
 
 
-        <MultiSelect label="Branch (select one or more)" options={em?.branches ?? []}
+        <MultiSelect
+          label={isDsy ? "Branch / Course (select one or more)"
+                       : "Branch (select one or more)"}
+          options={em?.branches ?? []}
           selected={branches} onChange={setBranches}
           placeholder="Search branches…"
           hint="Empty = All Branches. Tick one or more." />
 
-        <MultiSelect label="District (select one or more)" options={em?.districts ?? []}
-          selected={districts} onChange={setDistricts}
-          placeholder="Search districts…"
-          hint="Empty = All Districts. Tick one or more." />
+        {!isDsy && (
+          <MultiSelect label="District (select one or more)" options={em?.districts ?? []}
+            selected={districts} onChange={setDistricts}
+            placeholder="Search districts…"
+            hint="Empty = All Districts. Tick one or more." />
+        )}
 
         <button onClick={onPredict} disabled={loading}
           className={`w-full rounded-lg px-4 py-3 font-semibold text-white transition disabled:opacity-50 ${
             accent === "blue"
               ? "bg-blue-600 hover:bg-blue-700"
+              : accent === "emerald"
+              ? "bg-emerald-600 hover:bg-emerald-700"
               : "bg-purple-600 hover:bg-purple-700"}`}>
           {loading ? "Predicting…" : "🔮 Predict Colleges"}
         </button>
@@ -192,7 +200,8 @@ export function PredictorForm({ exam }: { exam: "MH-CET" | "JEE-Main" }) {
       <section className="flex-1 space-y-5 p-5 sm:p-8">
         <div>
           <h1 className="flex items-center gap-2 text-2xl font-extrabold sm:text-3xl">
-            <span>🎓</span> {exam} College Predictor
+            <span>🎓</span>{" "}
+            {isDsy ? "DSY (Direct Second Year)" : exam} College Predictor
           </h1>
           <p className="mt-1 text-sm text-slate-400">
             Enter your {mode} and filters to see which colleges you can get.
@@ -219,7 +228,7 @@ export function PredictorForm({ exam }: { exam: "MH-CET" | "JEE-Main" }) {
               </p>
               <button className="btn" onClick={downloadPdf}>📄 Download PDF</button>
             </div>
-            <ResultsTable data={result} variant="prediction" />
+            <ResultsTable data={result} variant="prediction" hideRegion={isDsy} />
           </>
         )}
 

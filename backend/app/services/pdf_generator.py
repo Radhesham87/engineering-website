@@ -244,38 +244,54 @@ def build_prediction_pdf(pred: dict, branding: dict | None = None) -> bytes:
         Spacer(1, 4 * mm), details, Spacer(1, 6 * mm)]
 
     # ---- results table ----------------------------------------------------
-    headers = ["Sr.No", "College Code", "College Name", "District", "Branch",
-               "Choice Code", "University", "Percentile", "Merit Rank"]
+    is_dsy = str(pred.get("exam", "")).upper() == "DSY"
+    if is_dsy:        # DSE CAP is state-level: no District / University cols
+        headers = ["Sr.No", "College Code", "College Name", "Branch",
+                   "Choice Code", "Percentile", "Merit Rank"]
+    else:
+        headers = ["Sr.No", "College Code", "College Name", "District",
+                   "Branch", "Choice Code", "University", "Percentile",
+                   "Merit Rank"]
     data = [[Paragraph(h, head) for h in headers]]
     for r in pred["results"]:
         name = r["college_name"]
         if r.get("priority"):
             name = "\u2605 " + name
-        data.append([
+        row_cells = [
             Paragraph(str(r["sr_no"]), cell),
             Paragraph(str(r["college_code"]), cell),
-            Paragraph(name, cell),
-            Paragraph(r.get("district", "-"), cell),
-            Paragraph(r["branch"], cell),
-            Paragraph(str(r.get("choice_code") or "-"), cell),
-            Paragraph(_university(r), cell),
-            Paragraph(f'{r["cutoff_percentile"]:.4f}'
-                      if r["cutoff_percentile"] is not None else "-", cell),
-            Paragraph(f'{r["cutoff_rank"]:,}'
-                      if r["cutoff_rank"] is not None else "-", cell)])
+            Paragraph(name, cell)]
+        if not is_dsy:
+            row_cells.append(Paragraph(r.get("district", "-"), cell))
+        row_cells.append(Paragraph(r["branch"], cell))
+        row_cells.append(Paragraph(str(r.get("choice_code") or "-"), cell))
+        if not is_dsy:
+            row_cells.append(Paragraph(_university(r), cell))
+        row_cells.append(Paragraph(f'{r["cutoff_percentile"]:.4f}'
+                                   if r["cutoff_percentile"] is not None
+                                   else "-", cell))
+        row_cells.append(Paragraph(f'{r["cutoff_rank"]:,}'
+                                   if r["cutoff_rank"] is not None
+                                   else "-", cell))
+        data.append(row_cells)
 
-    table = Table(data, colWidths=[12 * mm, 20 * mm, 64 * mm, 24 * mm,
-                                   50 * mm, 24 * mm, 32 * mm, 24 * mm,
-                                   21 * mm],
-                  repeatRows=1)
+    if is_dsy:
+        col_w = [12 * mm, 22 * mm, 96 * mm, 66 * mm, 28 * mm, 26 * mm,
+                 21 * mm]
+    else:
+        col_w = [12 * mm, 20 * mm, 64 * mm, 24 * mm, 50 * mm, 24 * mm,
+                 32 * mm, 24 * mm, 21 * mm]
+    table = Table(data, colWidths=col_w, repeatRows=1)
     tstyle = [
         ("BACKGROUND", (0, 0), (-1, 0), BLUE),
         ("GRID", (0, 0), (-1, -1), 0.4, colors.HexColor("#9aa7b4")),
         ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
         # standard alignment: numbers centred / right, text left
         ("ALIGN", (0, 0), (1, -1), "CENTER"),      # Sr.No, College Code
-        ("ALIGN", (5, 0), (6, -1), "CENTER"),   # Choice Code, University
-        ("ALIGN", (7, 0), (8, -1), "RIGHT"),    # Percentile, Merit Rank
+        (("ALIGN", (4, 0), (4, -1), "CENTER") if is_dsy else
+         ("ALIGN", (5, 0), (6, -1), "CENTER")),
+        (("ALIGN", (5, 0), (6, -1), "RIGHT") if is_dsy else
+         ("ALIGN", (7, 0), (8, -1), "RIGHT")),
         ("TOPPADDING", (0, 0), (-1, -1), 4),
         ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
         ("LEFTPADDING", (0, 0), (-1, -1), 4),

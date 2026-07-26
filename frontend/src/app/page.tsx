@@ -44,7 +44,7 @@ export default function Home() {
           <p className="mx-auto mt-5 max-w-2xl text-white/70">
             Predict probable engineering colleges by percentile or rank. Filter
             by branch, category and district — backed by last year&apos;s CAP
-            closing cutoffs for MH-CET and JEE-Main.
+            closing cutoffs for MH-CET, JEE-Main and DSY (Direct Second Year).
           </p>
 
           {/* Two separated prediction entry points */}
@@ -56,6 +56,10 @@ export default function Home() {
             <Link href="/jee"
               className="rounded-xl bg-purple-600 px-8 py-4 font-semibold shadow-lg shadow-purple-900/40 transition hover:bg-purple-700">
               🚀 JEE-Main Prediction
+            </Link>
+            <Link href="/dsy"
+              className="rounded-xl bg-emerald-600 px-8 py-4 font-semibold shadow-lg shadow-emerald-900/40 transition hover:bg-emerald-700">
+              🎯 DSY Prediction
             </Link>
           </div>
 

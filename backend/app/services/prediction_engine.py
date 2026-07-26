@@ -147,6 +147,28 @@ def university_of(district: str) -> str | None:
     return _UNIVERSITY_BY_DISTRICT.get(district.strip().upper().rstrip("."))
 
 
+# DSY (Direct Second Year / DSE CAP) category codes shown in the Category
+# box. G/L gender prefixes apply to the first group only.
+DSY_CATEGORIES = [
+    "OPEN", "OBC", "SC", "ST", "SEBC", "NTA", "NTB", "NTC", "NTD",
+    "EWS", "MI", "ORP", "DEF-O", "DEFR-OBC", "DEFR-SC", "DEFR-SEBC",
+    "PWD-O", "PWDR-OBC", "PWDR-SC", "PWDR-SEBC", "PWDR-ST",
+]
+_DSY_GL = {"OPEN", "OBC", "SC", "ST", "SEBC", "NTA", "NTB", "NTC", "NTD"}
+
+
+def _dsy_prefixes(category: str, gender: str) -> list[str]:
+    cu = (category or "").strip().upper()
+    if cu in _DSY_GL:
+        g = (gender or "gender-neutral").lower()
+        if g == "ladies":
+            return ["L" + cu]
+        if g == "any":
+            return ["G" + cu, "L" + cu]
+        return ["G" + cu]
+    return [cu]
+
+
 def meta() -> dict:
     df = load_dataset()
     out = {"exams": sorted(e for e in df["exam"].unique() if e),
@@ -156,6 +178,7 @@ def meta() -> dict:
         out["by_exam"][exam] = {
             "branches": sorted(b for b in sub["branch"].unique() if b),
             "categories": (MHTCET_CATEGORIES if exam.upper() == "MH-CET"
+                           else DSY_CATEGORIES if exam.upper() == "DSY"
                            else sorted(c for c in sub["category"].unique() if c)),
             "districts": sorted(d for d in sub["district"].unique() if d),
             "quotas": sorted(s for s in sub["status"].unique() if s),
@@ -209,9 +232,12 @@ def predict(exam: str, mode: str, value: float, category: str,
 
     d = df[df["exam_u"] == exam.upper()]
 
-    show_category = exam.upper() == "MH-CET"
+    show_category = exam.upper() in ("MH-CET", "DSY")
     if show_category and category:
-        prefs = tuple(_category_prefixes(category, gender))
+        if exam.upper() == "DSY":
+            prefs = tuple(_dsy_prefixes(category, gender))
+        else:
+            prefs = tuple(_category_prefixes(category, gender))
         cat_mask = d["category_u"].str.startswith(prefs)
         # Minority colleges have no reserved-category seats, so students
         # of OPEN/OBC/SEBC/NT/SC/ST/VJ compete there via the college's

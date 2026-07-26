@@ -10,15 +10,18 @@ import type { PredictResult } from "@/types";
 export function ResultsTable({
   data,
   variant = "full",
+  hideRegion = false,
 }: {
   data: PredictResult;
   variant?: "prediction" | "full";
+  hideRegion?: boolean;
 }) {
   const isPrediction = variant === "prediction";
   const showCat = data.show_category && !isPrediction;
   const showStatus = !isPrediction;
   const showHome =
-    isPrediction || data.results.some((r) => r.home_type && r.home_type !== "-");
+    !hideRegion &&
+    (isPrediction || data.results.some((r) => r.home_type && r.home_type !== "-"));
 
   return (
     <div className="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-800">
@@ -28,7 +31,7 @@ export function ResultsTable({
             <th className="px-3 py-2">Sr.No</th>
             <th className="px-3 py-2">College Code</th>
             <th className="px-3 py-2">College Name</th>
-            <th className="px-3 py-2">District</th>
+            {!hideRegion && <th className="px-3 py-2">District</th>}
             <th className="px-3 py-2">Branch</th>
             <th className="px-3 py-2">Choice Code</th>
             {showCat && <th className="px-3 py-2">Category</th>}
@@ -51,7 +54,7 @@ export function ResultsTable({
                 {r.priority && <span className="mr-1 text-amber-500" title="Priority institute">★</span>}
                 {r.college_name}
               </td>
-              <td className="px-3 py-2">{r.district}</td>
+              {!hideRegion && <td className="px-3 py-2">{r.district}</td>}
               <td className="px-3 py-2">{r.branch}</td>
               <td className="px-3 py-2 whitespace-nowrap">{r.choice_code || "-"}</td>
               {showCat && <td className="px-3 py-2">{r.category}</td>}

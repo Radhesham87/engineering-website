@@ -86,7 +86,7 @@ def download_pdf(prediction_id: int, db: Session = Depends(get_db),
         "student_name": pred.student_name, "exam": pred.exam,
         "mode": pred.mode, "value": pred.value, "category": pred.category,
         "branches": pred.branches or [], "districts": pred.districts or [],
-        "show_category": pred.exam.upper() == "MH-CET",
+        "show_category": pred.exam.upper() in ("MH-CET", "DSY"),
         "home_university": home_univ,
         "count": pred.result_count, "results": results}
     pdf = build_prediction_pdf(payload,
