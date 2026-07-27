@@ -152,3 +152,31 @@ this), and restrict `FRONTEND_ORIGINS` to your real domains.
 
 - **Admin:** `admin@engpredictor.com` / `Admin@12345` (change immediately)
 - **Users:** self-register, then an admin approves them before they can log in.
+
+---
+
+## Updating the DSY (DSE CAP) cutoff data
+
+The DSY slice of `backend/data/engineering_cutoffs.csv.gz` is generated from the
+State CET Cell's DSE CAP workbook. The source file lives at
+`backend/data/sources/DSE_CAP1_Cutoff_2025-26.xlsx`.
+
+To re-import it (or import a newer year's file):
+
+```bash
+python backend/scripts/rebuild_dsy.py \
+    --xlsx backend/data/sources/DSE_CAP1_Cutoff_2025-26.xlsx \
+    --sheet "DSE CAP-I Cutoff 2025-26"
+```
+
+The script replaces **only** the `exam == "DSY"` rows and leaves the MH-CET and
+JEE-Main rows untouched. It expects these sheet columns:
+
+`College Code | College Name | Choice Code | Course Name | Category | Rank | Percentile`
+
+It also handles the two quirks of this data source: rows with a blank
+`Course Name` are dropped, and pure-digit `Choice Code` values shorter than 10
+characters are `zfill(10)`-restored, because Excel strips their leading zeros.
+
+Current totals: **50,325 rows** — 34,730 MH-CET + 14,330 DSY + 1,265 JEE-Main
+(DSY: 347 colleges, 92 courses, 30 category codes).
