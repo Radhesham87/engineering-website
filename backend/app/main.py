@@ -31,9 +31,12 @@ def _rate_limit_handler(request: Request, exc: RateLimitExceeded):
                         content={"detail": "Too many requests. Slow down."})
 
 
+log.info("CORS allowed origins: %s", settings.cors_origins)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
+    allow_origin_regex=settings.FRONTEND_ORIGIN_REGEX,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

@@ -18,7 +18,22 @@ class Settings(BaseSettings):
     ADMIN_PASSWORD: str = "Admin@12345"
     ADMIN_NAME: str = "Administrator"
 
-    FRONTEND_ORIGINS: str = "http://localhost:3000"
+    # Comma-separated list of allowed frontend origins (exact matches).
+    # IMPORTANT: this must be set as an env var on whatever platform hosts
+    # the backend (Render, Cloud Run, etc.) — it does NOT get picked up
+    # automatically just by being in this file. Include your deployed
+    # frontend URL(s), e.g.:
+    #   FRONTEND_ORIGINS=https://engineering-website.netlify.app,http://localhost:3000
+    FRONTEND_ORIGINS: str = (
+        "http://localhost:3000,https://engineering-website.netlify.app"
+    )
+
+    # Regex fallback so Netlify deploy-preview URLs (which get a random
+    # subdomain per build/branch, e.g. 64f1a2b3--engineering-website.netlify.app)
+    # also work without needing an env var update on every deploy.
+    FRONTEND_ORIGIN_REGEX: str = (
+        r"^https://([a-zA-Z0-9-]+--)?engineering-website\.netlify\.app$"
+    )
 
     # Unified engineering cutoff dataset (MH-CET + JEE-Main)
     DATASET_PATH: str = "data/engineering_cutoffs.csv.gz"
