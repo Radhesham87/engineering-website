@@ -57,49 +57,61 @@ def on_startup():
     else:
         log.info("Using persistent database backend: %s", backend)
 
-    Base.metadata.create_all(bind=engine)
-    # lightweight migration: ensure the single-device session column exists
     try:
-        with engine.begin() as conn:
-            conn.execute(text(
-                "ALTER TABLE users ADD COLUMN IF NOT EXISTS "
-                "session_id VARCHAR(64)"))
-    except Exception as e:  # sqlite / already exists
-        log.info("session_id migration skipped: %s", e)
-    db = SessionLocal()
-    try:
-        admin_user = db.query(User).filter(
-            User.email == settings.ADMIN_EMAIL).first()
-        if not admin_user:
-            db.add(User(
-                name=settings.ADMIN_NAME, email=settings.ADMIN_EMAIL,
-                password_hash=hash_password(settings.ADMIN_PASSWORD),
-                role=Role.admin, status=Status.approved, is_active=True))
-            db.commit()
-            log.info("Seeded default admin %s", settings.ADMIN_EMAIL)
-        # branded partner account (PDFs carry GROVY branding for this email)
-        partner_email = "gncnanded@gmail.com"
-        if not db.query(User).filter(User.email == partner_email).first():
-            db.add(User(
-                name="GROVY Education Consultant",
-                email=partner_email,
-                password_hash=hash_password("Pass@1234"),
-                mobile="9921770747", city="Nanded", state="Maharashtra",
-                role=Role.user, status=Status.approved, is_active=True))
-            db.commit()
-            log.info("Seeded branded partner account %s", partner_email)
-        aspire_email = "aspirecareer1212@gmail.com"
-        if not db.query(User).filter(User.email == aspire_email).first():
-            db.add(User(
-                name="ASPIRE Career Counselling Center",
-                email=aspire_email,
-                password_hash=hash_password("Aspire@1212"),
-                mobile="9607801212", city="Latur", state="Maharashtra",
-                role=Role.user, status=Status.approved, is_active=True))
-            db.commit()
-            log.info("Seeded branded partner account %s", aspire_email)
-    finally:
-        db.close()
+        Base.metadata.create_all(bind=engine)
+        # lightweight migration: ensure the single-device session column exists
+        try:
+            with engine.begin() as conn:
+                conn.execute(text(
+                    "ALTER TABLE users ADD COLUMN IF NOT EXISTS "
+                    "session_id VARCHAR(64)"))
+        except Exception as e:  # sqlite / already exists
+            log.info("session_id migration skipped: %s", e)
+        db = SessionLocal()
+        try:
+            admin_user = db.query(User).filter(
+                User.email == settings.ADMIN_EMAIL).first()
+            if not admin_user:
+                db.add(User(
+                    name=settings.ADMIN_NAME, email=settings.ADMIN_EMAIL,
+                    password_hash=hash_password(settings.ADMIN_PASSWORD),
+                    role=Role.admin, status=Status.approved, is_active=True))
+                db.commit()
+                log.info("Seeded default admin %s", settings.ADMIN_EMAIL)
+            # branded partner account (PDFs carry GROVY branding for this email)
+            partner_email = "gncnanded@gmail.com"
+            if not db.query(User).filter(User.email == partner_email).first():
+                db.add(User(
+                    name="GROVY Education Consultant",
+                    email=partner_email,
+                    password_hash=hash_password("Pass@1234"),
+                    mobile="9921770747", city="Nanded", state="Maharashtra",
+                    role=Role.user, status=Status.approved, is_active=True))
+                db.commit()
+                log.info("Seeded branded partner account %s", partner_email)
+            aspire_email = "aspirecareer1212@gmail.com"
+            if not db.query(User).filter(User.email == aspire_email).first():
+                db.add(User(
+                    name="ASPIRE Career Counselling Center",
+                    email=aspire_email,
+                    password_hash=hash_password("Aspire@1212"),
+                    mobile="9607801212", city="Latur", state="Maharashtra",
+                    role=Role.user, status=Status.approved, is_active=True))
+                db.commit()
+                log.info("Seeded branded partner account %s", aspire_email)
+        finally:
+            db.close()
+    except Exception:
+        # IMPORTANT: never let a DB hiccup (e.g. a sleeping/unreachable Neon
+        # instance) prevent the container from finishing startup. If this
+        # raises, Cloud Run's startup probe times out waiting for the port
+        # and kills the whole deploy -- even though the DB might recover
+        # seconds later. Log it loudly and keep booting; endpoints that
+        # need the DB will surface their own errors per-request instead.
+        log.exception(
+            "DB initialization failed at startup (container will still "
+            "start and serve traffic; DB-dependent routes will fail until "
+            "this is resolved)")
 
 
 @app.get("/api/health")
