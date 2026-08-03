@@ -178,12 +178,10 @@ export function PredictorForm({ exam }: { exam: "MH-CET" | "JEE-Main" | "DSY" })
           placeholder="Search branches…"
           hint="Empty = All Branches. Tick one or more." />
 
-        {!isDsy && (
-          <MultiSelect label="District (select one or more)" options={em?.districts ?? []}
-            selected={districts} onChange={setDistricts}
-            placeholder="Search districts…"
-            hint="Empty = All Districts. Tick one or more." />
-        )}
+        <MultiSelect label="District (select one or more)" options={em?.districts ?? []}
+          selected={districts} onChange={setDistricts}
+          placeholder="Search districts…"
+          hint="Empty = All Districts. Tick one or more." />
 
         <button onClick={onPredict} disabled={loading}
           className={`w-full rounded-lg px-4 py-3 font-semibold text-white transition disabled:opacity-50 ${
@@ -228,7 +226,7 @@ export function PredictorForm({ exam }: { exam: "MH-CET" | "JEE-Main" | "DSY" })
               </p>
               <button className="btn" onClick={downloadPdf}>📄 Download PDF</button>
             </div>
-            <ResultsTable data={result} variant="prediction" hideRegion={isDsy} />
+            <ResultsTable data={result} variant="prediction" />
           </>
         )}
 
