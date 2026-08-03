@@ -49,6 +49,14 @@ PARTNER_BRANDING = {
         "footer_pages": "last",
         "footer": "9607801212 | 9370736973 | 9607901212",
     },
+    "broadwayeconsultant@gmail.com": {
+        "header_image": os.path.join(_ASSETS, "broadway_header.png"),
+        "header_height_mm": 22,
+        "top_margin_mm": 32,
+        "watermark_image": os.path.join(_ASSETS, "broadway_watermark.png"),
+        "footer": ("Beside Metro Shop, Old B.K.Hall , Srinagar , "
+                   "Nanded- Mo. 9822393225"),
+    },
 }
 
 

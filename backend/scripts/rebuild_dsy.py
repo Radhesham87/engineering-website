@@ -11,14 +11,20 @@ Usage
 
 Expected sheet columns (first sheet is used unless --sheet is given):
     College Code | College Name | Choice Code | Course Name | Category
-                 | Rank | Percentile
+                 | Rank | Percentile | District
+
+("District" is optional -- older workbooks without it still work; every
+row's district is then left blank as before.)
 
 Notes on the transforms applied (kept identical to the original import):
   * rows with a blank Course Name are dropped (4 in the 2025-26 file)
   * Choice Code is a STRING; pure-digit codes shorter than 10 chars are
     zfill(10)-restored because Excel eats leading zeros
-  * DSE CAP is state-level, so district / status are blank and minority is
-    "Non-Minority" for every row
+  * District is cleaned (stripped, trailing dots removed, known typos
+    fixed e.g. "NADURBAR" -> "NANDURBAR") so it lines up with district
+    names used elsewhere in the app (home-university mapping, etc.)
+  * status is blank (DSE CAP has no separate quota column) and minority
+    is "Non-Minority" for every row
 """
 from __future__ import annotations
 
@@ -49,6 +55,28 @@ RENAME = {
     "Rank": "cutoff_rank",
     "Percentile": "cutoff_percentile",
 }
+
+# columns that are nice-to-have but not required in every workbook
+OPTIONAL_RENAME = {
+    "District": "district",
+}
+
+# known typos / stray-whitespace variants seen in DSE CAP workbooks,
+# normalized to the canonical district name used across the app
+_DISTRICT_FIXES = {
+    "NADURBAR": "NANDURBAR",
+    "RAIGAD.": "RAIGAD",
+    "SINDHUDURG.": "SINDHUDURG",
+}
+
+
+def _clean_district(value) -> str:
+    if pd.isna(value):
+        return ""
+    d = str(value).strip().rstrip(".").strip()
+    if not d:
+        return ""
+    return _DISTRICT_FIXES.get(d.upper(), d.upper())
 
 
 def _clean_choice_code(value) -> str:
@@ -81,9 +109,12 @@ def build_dsy_frame(xlsx_path: str, sheet: str | int = 0) -> pd.DataFrame:
     for col in ("cutoff_rank", "cutoff_percentile"):
         df[col] = pd.to_numeric(df[col], errors="coerce")
 
-    # DSE CAP is state-level: no district, no quota/status, no minority split.
+    # DSE CAP has no quota/status column and no minority split.
     df["exam"] = "DSY"
-    df["district"] = ""
+    if "District" in raw.columns:
+        df["district"] = raw["District"].map(_clean_district)
+    else:
+        df["district"] = ""
     df["status"] = ""
     df["minority"] = "Non-Minority"
 
